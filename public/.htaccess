@@ -1,0 +1,23 @@
+# Hostinger (LiteSpeed / Apache) settings for the static export.
+# This file is copied into dist/ by `npm run build`; keep it when you upload.
+
+# the site's own 404 page
+ErrorDocument 404 /404.html
+
+# folder-style URLs: /projects/jobber/ → /projects/jobber/index.html
+DirectoryIndex index.html
+
+# hashed build assets never change: cache them for a year; HTML always fresh
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css|woff2?|svg|png|jpe?g|webp|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "\.(html|txt|json)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+
+# compress text files
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain application/javascript application/json image/svg+xml
+</IfModule>

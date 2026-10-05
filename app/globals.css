@@ -1,26 +1,266 @@
 @import "tailwindcss";
 
+/* ── Design tokens: "the unboxing" ─────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ink: #121212;
+  --cream: #f6efe3;
+  --orange: #f37021;
+  --tiffany: #81d8d0;
+
+  /* derived neutrals (body text only ever sits on cream or ink) */
+  --paper: #fbf7ef; /* card stock, a touch lighter than cream */
+  --muted: #6b645a; /* muted text on cream (≈5:1) */
+  --muted-dark: #a19a8f; /* muted text on ink (≈6:1) */
+  --hairline: rgb(18 18 18 / 0.12);
+  --hairline-dark: rgb(246 239 227 / 0.14);
+
+  --ease-lux: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: var(--ink);
+  --color-cream: var(--cream);
+  --color-orange: var(--orange);
+  --color-tiffany: var(--tiffany);
+  --color-paper: var(--paper);
+  --color-muted: var(--muted);
+  --color-muted-dark: var(--muted-dark);
+  --color-hairline: var(--hairline);
+  --color-hairline-dark: var(--hairline-dark);
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  --ease-lux: var(--ease-lux);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--cream);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  background: var(--cream);
+}
+
+::selection {
+  background: var(--tiffany);
+  color: var(--ink);
+}
+
+/* ── Luxury micro-label ────────────────────────────────────────────────── */
+@utility micro-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* ── Focus: always visible for keyboard users ──────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+[data-theme="dark"] :focus-visible {
+  outline-color: var(--tiffany);
+}
+
+/* Off-screen until focused, then pinned bottom-left as a pill.
+   Used for the accessible twin of links that live inside the aria-hidden canvas. */
+.focus-reveal {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.focus-reveal:focus,
+.focus-reveal:focus-visible {
+  position: fixed;
+  left: 1.5rem;
+  bottom: 1.5rem;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  z-index: 60;
+  padding: 0.75rem 1.1rem;
+  background: var(--ink);
+  color: var(--cream);
+  border-radius: 999px;
+  font-size: 0.875rem;
+}
+
+/* ── Grain: a fixed, non-interactive film-grain layer ──────────────────── */
+.grain {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 1.6 -0.35'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── List view: solid colours ──────────────────────────────────────────
+   Cream page, paper cards with a hairline, ink text; a solid ink navbar
+   and contact card. Hermès orange is the accent (markers, the active nav
+   line, link underlines, "featured", the main buttons, always with ink
+   text on it), soft Tiffany for tags. Contrast: ink on cream ~16:1, ink/70
+   ~7:1, ink on orange ~6.4:1, cream on ink ~16:1.
+   Headings: Fraunces; body: DM Sans (app/fonts). */
+.list-view {
+  --font-manrope: var(--font-dm-sans); /* font-sans → DM Sans here */
+  position: relative;
+  overflow-x: clip;
+  font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--cream);
+}
+.list-view .list-wrap {
+  margin-inline: auto;
+  max-width: 72rem;
+  padding-inline: 1.5rem;
+}
+@media (min-width: 768px) {
+  .list-view .list-wrap {
+    padding-inline: 2.5rem;
+  }
+}
+.list-view section[id],
+.list-view header[id] {
+  scroll-margin-top: 5rem;
+}
+.list-view :where(h1, h2, h3, h4) {
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  font-variation-settings: "SOFT" 30, "opsz" 144;
+}
+.list-view :where(h3, h4) {
+  font-variation-settings: "SOFT" 30, "opsz" 48;
+}
+.list-view :focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.list-view :is(.bg-ink, .list-nav nav) :focus-visible {
+  outline-color: var(--orange);
+}
+.list-view .card {
+  background: #fffdf8;
+  border: 1px solid #e6dccd;
+  box-shadow: 0 1px 0 rgb(18 18 18 / 0.03);
+  transition:
+    border-color 0.3s var(--ease-lux),
+    box-shadow 0.3s var(--ease-lux);
+}
+.list-view .card:hover {
+  border-color: #cdbca5;
+  box-shadow: 0 14px 30px -22px rgb(18 18 18 / 0.35);
+}
+.list-view .bg-tiffany-soft {
+  background: #d4f0ec;
+}
+.list-view a:not(.btn) {
+  text-decoration: underline;
+  text-decoration-color: var(--orange);
+  text-underline-offset: 0.24em;
+  text-decoration-thickness: 1.5px;
+  transition: text-decoration-thickness 0.2s;
+}
+.list-view a:not(.btn):hover {
+  text-decoration-thickness: 2.5px;
+}
+.list-view a.no-underline {
+  text-decoration: none;
+}
+/* the navbar's current-section marker */
+.list-view .nav-link[aria-current="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.2rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--orange);
+}
+
+/* list view decided before hydration (see the inline script in app/layout.tsx):
+   show the list in place right away instead of the sr-only copy + cover */
+html[data-initial-view="list"] [data-list-shell][data-pending] {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+html[data-initial-view="list"] [data-pending-cover] {
+  display: none;
+}
+
+/* time scrubber: a day-gradient track */
+.time-scrubber {
+  appearance: none;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #111c40 0%, #24315c 20%, #f7cfb6 27%, #6fb1e8 34%, #6fb1e8 66%, #f8c47e 72%, #f37021 77%, #4b3d6f 81%, #111c40 86%, #111c40 100%);
+}
+.time-scrubber::-webkit-slider-thumb {
+  appearance: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 999px;
+  background: var(--cream);
+  border: 2px solid var(--ink);
+}
+.time-scrubber::-moz-range-thumb {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 999px;
+  background: var(--cream);
+  border: 2px solid var(--ink);
+}
+
+/* dollhouse room jumps: streaks + a tint flash */
+@keyframes streak {
+  from {
+    transform: translateX(0);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateX(260%);
+    opacity: 0;
+  }
+}
+@keyframes tint {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 0;
+  }
 }

@@ -1,0 +1,363 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+import {
+  Building2,
+  CircleHelp,
+  Eye,
+  Moon,
+  Sun,
+  User,
+  Frame,
+  GraduationCap,
+  House,
+  List,
+  Mail,
+  Trophy,
+  Volume2,
+  VolumeX,
+  type LucideIcon,
+} from "lucide-react";
+import { site, mailto } from "@/data/site";
+import { GitHubIcon, LinkedInIcon } from "@/components/icons";
+import { BUILDINGS, type BuildingId } from "../world/layout";
+import { useTown } from "../state";
+import { enterBuilding } from "../scene/Player";
+import { togglePov } from "../controls";
+import { formatClock, isDayTime, torontoHours } from "@/lib/time";
+import { Joystick } from "./Joystick";
+import { FocusPrompt } from "./FocusPrompt";
+import { StartCard } from "./StartCard";
+import { Fade, InteriorHud, SpeechBubble } from "./InteriorHud";
+import { skipIntro } from "../intro/intro";
+import { TowerHud } from "./TowerHud";
+
+const ICONS: Record<BuildingId, LucideIcon> = {
+  home: House,
+  experience: Building2,
+  projects: Frame,
+  extracurriculars: Trophy,
+  education: GraduationCap,
+};
+
+const pill =
+  "pointer-events-auto rounded-full border border-ink/10 bg-cream/88 shadow-[0_10px_30px_-14px_rgb(18_18_18/0.4)] backdrop-blur-md";
+const iconBtn =
+  "inline-flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full text-ink/80 transition-colors hover:bg-ink hover:text-cream";
+
+export function Hud({ touch }: { touch: boolean }) {
+  const inside = useTown((s) => s.interior !== null);
+  const intro = useTown((s) => s.intro);
+  const speech = useTown((s) => s.speech);
+  return (
+    <div className="pointer-events-none absolute inset-0 z-10 select-none">
+      {/* the game UI: hidden and unreachable during the intro, fades in at the handoff */}
+      <div
+        inert={intro}
+        aria-hidden={intro}
+        className={`absolute inset-0 transition-opacity duration-700 ${intro ? "opacity-0" : "opacity-100 delay-200"}`}
+      >
+        <Identity />
+        <TimeBar />
+        <TopRight />
+        {!inside && <DoorPrompt touch={touch} />}
+        {!inside && <FastTravel />}
+        <FocusPrompt touch={touch} />
+        <InteriorHud />
+        <TowerHud />
+        <Toast />
+        {touch && !inside && !intro && <Joystick />}
+      </div>
+      <Letterbox intro={intro} />
+      <SpeechBubble />
+      {/* what he says, for screen readers (the canvas is aria-hidden) */}
+      <p className="sr-only" role="status" aria-live="polite">
+        {speech ? `Eshaan: ${speech.text}` : ""}
+      </p>
+      <StartCard touch={touch} />
+      <Fade />
+      <LoadingScreen />
+    </div>
+  );
+}
+
+/**
+ * Cinematic bars while the intro plays, plus a small, quiet "skip" (it
+ * appears after ~3 s; Esc / Enter skip too). The bars slide away at the
+ * handoff.
+ */
+function Letterbox({ intro }: { intro: boolean }) {
+  const ready = useTown((s) => s.ready);
+  const [skippable, setSkippable] = useState(false);
+  useEffect(() => {
+    if (!ready || !intro) return;
+    const id = setTimeout(() => setSkippable(true), 3000);
+    return () => clearTimeout(id);
+  }, [ready, intro]);
+  const bar = "absolute inset-x-0 h-[clamp(1.75rem,7vh,4.25rem)] bg-ink transition-transform duration-700 ease-in-out";
+  return (
+    <div aria-hidden={!intro}>
+      <div className={`${bar} top-0 ${intro ? "" : "-translate-y-full"}`} />
+      <div className={`${bar} bottom-0 flex items-center justify-end px-4 md:px-6 ${intro ? "" : "translate-y-full"}`}>
+        {intro && (
+          <button
+            type="button"
+            onClick={skipIntro}
+            tabIndex={skippable ? 0 : -1}
+            aria-label="Skip the intro (Esc or Enter)"
+            className={`micro-label rounded px-1.5 py-1 text-[0.58rem] text-cream/40 transition-opacity duration-500 hover:text-cream/80 focus-visible:text-cream ${
+              skippable ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+            }`}
+          >
+            skip
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Identity() {
+  return (
+    <div className={`${pill} absolute top-3 left-3 rounded-[16px] px-3 py-2 md:top-6 md:left-6 md:rounded-[18px] md:px-5 md:py-4`}>
+      <p className="micro-label text-[0.52rem] text-muted md:text-[0.68rem]">{site.location}</p>
+      <p className="mt-1 font-display text-[1.25rem] leading-none lowercase md:mt-1.5 md:text-[2.1rem]">eshaan kapooswalla</p>
+      <p className="mt-0.5 text-[0.68rem] text-ink/75 md:mt-1 md:text-[0.92rem]">engineering + community builder</p>
+    </div>
+  );
+}
+
+/**
+ * The clock (click to open the time scrubber; it runs on America/Toronto time internally), day/night toggle and the
+ * POV switch, under the name card. Inside Home the scrubber stays open so you
+ * can watch his day.
+ */
+function TimeBar() {
+  const time = useTown((s) => s.timeOfDay);
+  const toggleDayNight = useTown((s) => s.toggleDayNight);
+  const setTime = useTown((s) => s.setTimeOfDay);
+  const pov = useTown((s) => s.pov);
+  const interior = useTown((s) => s.interior);
+  const [open, setOpen] = useState(false);
+  const day = isDayTime(time);
+  const showScrubber = open || interior === "home";
+  return (
+    <div className="absolute top-[5.4rem] left-3 flex flex-col items-start gap-2 md:top-[8.6rem] md:left-6">
+      <div className={`${pill} flex items-center gap-0.5 p-1`}>
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={showScrubber}
+          aria-controls="time-scrubber"
+          title="change the time"
+          className="rounded-full px-2.5 py-1.5 font-mono text-[0.72rem] tracking-[0.08em] transition-colors hover:bg-ink hover:text-cream md:text-[0.8rem]"
+        >
+          <span className="tabular-nums">{formatClock(time)}</span>
+        </button>
+        <button type="button" onClick={toggleDayNight} className={iconBtn} aria-label={day ? "Switch to night" : "Switch to day"} title={day ? "night mode" : "day mode"}>
+          {day ? <Sun size={17} strokeWidth={1.7} /> : <Moon size={17} strokeWidth={1.7} />}
+        </button>
+        {!interior && (
+          <button
+            type="button"
+            onClick={togglePov}
+            aria-pressed={pov}
+            className={`${iconBtn} ${pov ? "bg-tiffany text-ink" : ""}`}
+            aria-label={pov ? "Third-person view (V)" : "First-person view (V)"}
+            title={pov ? "third person (V)" : "first person (V)"}
+          >
+            {pov ? <User size={17} strokeWidth={1.7} /> : <Eye size={17} strokeWidth={1.7} />}
+          </button>
+        )}
+      </div>
+      {showScrubber && (
+        <div id="time-scrubber" className={`${pill} w-[min(20rem,calc(100vw-1.5rem))] rounded-[16px] px-4 pt-3 pb-2`}>
+          <label className="flex items-center justify-between">
+            <span className="micro-label text-[0.6rem] text-muted">time of day</span>
+            <button type="button" onClick={() => setTime(torontoHours())} className="micro-label rounded-full px-2 py-1 text-[0.6rem] text-ink hover:bg-ink hover:text-cream">
+              now
+            </button>
+          </label>
+          <input
+            type="range"
+            min={0}
+            max={1435}
+            step={5}
+            value={Math.round(time * 60)}
+            onChange={(e) => setTime(Number(e.target.value) / 60)}
+            aria-label="Time of day"
+            aria-valuetext={formatClock(time)}
+            className="time-scrubber mt-2 w-full cursor-pointer accent-orange"
+          />
+          <div className="mt-0.5 flex justify-between font-mono text-[0.55rem] text-muted" aria-hidden="true">
+            <span>00</span>
+            <span>dawn</span>
+            <span>noon</span>
+            <span>sunset</span>
+            <span>24</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TopRight() {
+  const sound = useTown((s) => s.sound);
+  const volume = useTown((s) => s.volume);
+  const toggleSound = useTown((s) => s.toggleSound);
+  const setVolume = useTown((s) => s.setVolume);
+  const setMode = useTown((s) => s.setMode);
+  return (
+    <div className="absolute top-3 right-3 flex flex-col items-end gap-2 md:top-6 md:right-6 md:flex-row md:items-center">
+      <div className={`${pill} flex items-center gap-0.5 p-1`}>
+        <a href={mailto} className={iconBtn} aria-label="Email Eshaan">
+          <Mail size={17} strokeWidth={1.7} aria-hidden="true" />
+        </a>
+        <a href={site.linkedin} target="_blank" rel="noopener noreferrer" className={iconBtn} aria-label="LinkedIn (opens in a new tab)">
+          <LinkedInIcon size={15} />
+        </a>
+        <a href={site.github} target="_blank" rel="noopener noreferrer" className={iconBtn} aria-label="GitHub (opens in a new tab)">
+          <GitHubIcon size={16} />
+        </a>
+        <button
+          type="button"
+          onClick={() => useTown.getState().openStart()}
+          className={iconBtn}
+          aria-label="How to move around (?)"
+          title="how to move around (?)"
+        >
+          <CircleHelp size={17} strokeWidth={1.7} />
+        </button>
+        <button
+          type="button"
+          onClick={toggleSound}
+          className={iconBtn}
+          aria-pressed={sound}
+          aria-label={sound ? "Mute sound" : "Turn sound on"}
+        >
+          {sound ? <Volume2 size={17} strokeWidth={1.7} /> : <VolumeX size={17} strokeWidth={1.7} />}
+        </button>
+        {sound && (
+          <label className="flex items-center pr-2.5 pl-1">
+            <span className="sr-only">Volume</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={Math.round(volume * 100)}
+              onChange={(e) => setVolume(Number(e.target.value) / 100)}
+              className="h-1 w-16 cursor-pointer accent-orange md:w-20"
+            />
+          </label>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={() => setMode("list")}
+        className={`${pill} inline-flex h-9 items-center gap-2 px-3.5 text-[0.78rem] font-medium md:h-11 md:px-4 md:text-[0.85rem] transition-colors hover:bg-ink hover:text-cream`}
+      >
+        <List size={16} strokeWidth={1.8} aria-hidden="true" />
+        view as list
+      </button>
+    </div>
+  );
+}
+
+function FastTravel() {
+  const travelTo = useTown((s) => s.travelTo);
+  const travelling = useTown((s) => s.travelling);
+  const nearDoor = useTown((s) => s.nearDoor);
+  return (
+    <nav aria-label="Fast travel" className="absolute inset-x-0 bottom-3 flex justify-center px-2 md:bottom-6 md:px-3">
+      <ul className={`${pill} flex max-w-full gap-0 overflow-x-auto p-1 md:gap-0.5 md:p-1.5`}>
+        {BUILDINGS.map((b) => {
+          const Icon = ICONS[b.id];
+          const state = travelling === b.id ? "travelling" : nearDoor === b.id ? "here" : "idle";
+          return (
+            <li key={b.id}>
+              <button
+                type="button"
+                onClick={() => travelTo(b.id)}
+                data-state={state}
+                aria-label={`Walk to ${b.name}`}
+                className="flex h-12 flex-col items-center justify-center gap-0.5 rounded-full px-2 text-[0.62rem] font-medium text-ink/80 transition-colors hover:bg-ink hover:text-cream data-[state=here]:bg-tiffany data-[state=here]:text-ink data-[state=travelling]:bg-orange data-[state=travelling]:text-ink md:h-11 md:flex-row md:gap-2 md:px-4 md:text-[0.85rem]"
+              >
+                <Icon size={17} strokeWidth={1.7} aria-hidden="true" />
+                <span>{b.name}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
+function DoorPrompt({ touch }: { touch: boolean }) {
+  const nearDoor = useTown((s) => s.nearDoor);
+  const travelling = useTown((s) => s.travelling);
+  if (!nearDoor || travelling) return null;
+  const b = BUILDINGS.find((x) => x.id === nearDoor)!;
+  return (
+    <div className="absolute inset-x-0 bottom-[4.6rem] flex justify-end px-3 md:bottom-[5.4rem] md:justify-center md:px-0">
+      <div className={`${pill} flex items-center gap-3 py-1.5 pr-1.5 pl-4`}>
+        <span className="text-[0.85rem]">
+          {touch ? "tap to enter" : (
+            <>
+              press <kbd className="rounded border border-ink/20 bg-paper px-1.5 font-mono text-[0.75rem]">E</kbd> to enter
+            </>
+          )}{" "}
+          <span className="font-display text-[1.05rem] lowercase">{b.sign}</span>
+        </span>
+        <button
+          type="button"
+          onClick={() => enterBuilding(b.id)}
+          className="h-9 rounded-full bg-orange px-4 text-[0.85rem] font-medium text-ink transition-colors hover:bg-ink hover:text-cream"
+        >
+          enter
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Toast() {
+  const toast = useTown((s) => s.toast);
+  if (!toast) return null;
+  return (
+    <div role="status" className="absolute inset-x-0 top-24 flex justify-center px-4 md:top-8">
+      <p className={`${pill} px-5 py-2.5 text-[0.85rem]`}>{toast}</p>
+    </div>
+  );
+}
+
+function LoadingScreen() {
+  const loading = useTown((s) => s.loading);
+  const ready = useTown((s) => s.ready);
+  return (
+    <div
+      aria-hidden={ready}
+      className={`absolute inset-0 flex flex-col items-center justify-center gap-6 bg-cream transition-opacity duration-700 ${
+        ready ? "pointer-events-none opacity-0" : "pointer-events-auto opacity-100"
+      }`}
+    >
+      <svg width="88" height="72" viewBox="0 0 88 72" aria-hidden="true">
+        <rect x="6" y="30" width="22" height="38" rx="2" fill="var(--cream)" stroke="var(--ink)" strokeWidth="2" />
+        <rect x="33" y="8" width="22" height="60" rx="2" fill="var(--cream)" stroke="var(--ink)" strokeWidth="2" />
+        <rect x="60" y="22" width="22" height="46" rx="2" fill="var(--cream)" stroke="var(--ink)" strokeWidth="2" />
+        <rect x="39" y="54" width="10" height="14" fill="var(--tiffany)" />
+        <path d="M35 52h18l-2 4H37z" fill="var(--orange)" />
+        <rect x="12" y="38" width="10" height="8" fill="var(--tiffany)" />
+        <rect x="66" y="30" width="10" height="8" fill="var(--tiffany)" />
+      </svg>
+      <p className="font-display text-4xl lowercase">eshaan&apos;s city</p>
+      <div className="h-1 w-48 overflow-hidden rounded-full bg-ink/10">
+        <div className="h-full rounded-full bg-orange transition-[width] duration-500" style={{ width: `${Math.round(loading * 100)}%` }} />
+      </div>
+      <p className="micro-label text-muted">Loading · {Math.round(loading * 100)}%</p>
+    </div>
+  );
+}
