@@ -1,9 +1,11 @@
 /**
- * Single source of truth for projects.
- * - `image` is generated once by `scripts/generate-project-images.ts` from
- *   `imagePrompt` (the shared style prefix lives in that script). Until the
- *   file exists the tile renders an ink + accent gradient.
- * - The first four `featured` projects get the large tiles and a case-study route.
+ * Single source of truth for projects (the list view, the 3D Projects
+ * Gallery, the agent view and its .md / .json / llms.txt all read this).
+ * - Array order is the display order everywhere (fixed, never shuffled).
+ * - The `featured` four get the larger cards / frames and a case-study route.
+ * - `image`: only shown if a real file exists at /public/projects/<slug>.webp;
+ *   otherwise nothing is rendered (no placeholder). `imagePrompt` is kept for
+ *   scripts/generate-project-images.ts, which no view depends on.
  */
 
 export type Project = {
@@ -13,26 +15,68 @@ export type Project = {
   tags: string[];
   repoUrl: string;
   image: string;
-  imagePrompt: string;
+  imagePrompt?: string;
   accent: "orange" | "tiffany";
   featured: boolean;
-  /** Projects Gallery floor (1 fintech & trading … 5 play & math), see PROJECT_FLOORS */
-  floor: 1 | 2 | 3 | 4 | 5;
 };
-
-/** the gallery's floors, by theme */
-export const PROJECT_FLOORS = [
-  { floor: 1, theme: "Fintech & trading" },
-  { floor: 2, theme: "Systems & embedded" },
-  { floor: 3, theme: "ML & AI" },
-  { floor: 4, theme: "Full-stack & apps" },
-  { floor: 5, theme: "Play & math" },
-] as const;
 
 const gh = (repo: string) => `https://github.com/eshaan2418/${repo}`;
 const img = (slug: string) => `/projects/${slug}.webp`;
 
 export const projects: Project[] = [
+  // newest five first (descriptions exactly as given; tags: the given language, else GitHub's main language)
+  {
+    slug: "recall",
+    name: "Recall",
+    description: "On-device episodic visual memory for egocentric video: learned trigger, compact event memory, calibrated answers.",
+    tags: ["Python"],
+    repoUrl: gh("Recall"),
+    image: img("recall"),
+    accent: "tiffany",
+    featured: false,
+  },
+  {
+    slug: "aegisfabric",
+    name: "AegisFabric",
+    description:
+      "Network-aware, secure, multimodal training: joint placement/routing/checkpoint control on an emulated 3-site WAN (research artifact).",
+    tags: ["Python"],
+    repoUrl: gh("AegisFabric"),
+    image: img("aegisfabric"),
+    accent: "orange",
+    featured: false,
+  },
+  {
+    slug: "qshield-x",
+    name: "qshield-x",
+    description:
+      "Formally verified, FPGA-targeted union-find decoder for the surface code: RTL, C++ golden model, Wasm runtime, V8 patch, and a measured hardware-vs-software answer.",
+    tags: ["Python"],
+    repoUrl: gh("qshield-x"),
+    image: img("qshield-x"),
+    accent: "tiffany",
+    featured: false,
+  },
+  {
+    slug: "kubeml",
+    name: "KubeML",
+    description: "Kubernetes-native orchestration for observable, recoverable ML workloads.",
+    tags: ["Python"],
+    repoUrl: gh("KubeML"),
+    image: img("kubeml"),
+    accent: "orange",
+    featured: false,
+  },
+  {
+    slug: "agentflow",
+    name: "agentflow",
+    description: "AI agent workflows with durable DAG scheduling, Python workers, Kafka, PostgreSQL, FastAPI, Prometheus, and Grafana.",
+    tags: ["Go"],
+    repoUrl: gh("agentflow"),
+    image: img("agentflow"),
+    accent: "tiffany",
+    featured: false,
+  },
   {
     slug: "financesimple",
     name: "FinanceSimple",
@@ -46,7 +90,6 @@ export const projects: Project[] = [
       "a floating glass-and-brass dashboard orb with luminous orange and tiffany ribbons of light flowing through it like growing coins and charts, abstract, no readable numbers",
     accent: "orange",
     featured: true,
-    floor: 1,
   },
   {
     slug: "distdata",
@@ -60,7 +103,6 @@ export const projects: Project[] = [
       "a constellation of glossy tiffany-blue spheres connected by thin orange threads, one sphere pulsing as the leader, suspended in dark space like a distributed network",
     accent: "tiffany",
     featured: true,
-    floor: 2,
   },
   {
     slug: "eshaanos",
@@ -74,7 +116,6 @@ export const projects: Project[] = [
       "a macro shot of an elegant retro circuit board and stacked memory blocks arranged like a tiny city, orange traces glowing on dark substrate",
     accent: "tiffany",
     featured: true,
-    floor: 2,
   },
   {
     slug: "jobber",
@@ -87,7 +128,6 @@ export const projects: Project[] = [
       "a row of small interlocking cream and tiffany modular boxes tied with orange ribbon, hinting at microservices as gift boxes",
     accent: "orange",
     featured: true,
-    floor: 4,
   },
   {
     slug: "edge-ai-model-compression",
@@ -100,7 +140,6 @@ export const projects: Project[] = [
       "a large crystalline neural-network sculpture being compressed into a small glowing chip in an orange hand-sculpted vise, tiffany light",
     accent: "tiffany",
     featured: false,
-    floor: 3,
   },
   {
     slug: "fitmind-ai",
@@ -113,7 +152,6 @@ export const projects: Project[] = [
       "an abstract glossy brain made of flowing orange and tiffany ribbon, merged with a dumbbell silhouette",
     accent: "orange",
     featured: false,
-    floor: 3,
   },
   {
     slug: "morphunet",
@@ -126,7 +164,6 @@ export const projects: Project[] = [
       "a U-shaped sculpture of layered translucent glass slices, an image dissolving into segmented orange and tiffany regions",
     accent: "tiffany",
     featured: false,
-    floor: 3,
   },
   {
     slug: "shopsmart-ai",
@@ -139,7 +176,6 @@ export const projects: Project[] = [
       "a minimal shopping bag floating above a swirl of product silhouettes sorted by glowing orange arcs",
     accent: "orange",
     featured: false,
-    floor: 3,
   },
   {
     slug: "stockpredictor",
@@ -152,7 +188,6 @@ export const projects: Project[] = [
       "a sculptural candlestick-chart landscape in glossy 3D, tiffany bars rising, an orange dotted forecast line fading into fog",
     accent: "tiffany",
     featured: false,
-    floor: 1,
   },
   {
     slug: "mandelbrotexplorer",
@@ -165,7 +200,6 @@ export const projects: Project[] = [
       "a macro of the Mandelbrot set rendered as polished enamel in orange and tiffany gradients on black",
     accent: "orange",
     featured: false,
-    floor: 5,
   },
   {
     slug: "tetrisplay",
@@ -178,7 +212,6 @@ export const projects: Project[] = [
       "stacked glossy tetromino blocks in orange, tiffany, and cream, falling into place against a dark grid",
     accent: "tiffany",
     featured: false,
-    floor: 5,
   },
   {
     slug: "plantwateringsystem",
@@ -191,7 +224,6 @@ export const projects: Project[] = [
       "a small elegant potted plant with a sleek tiffany sensor and a single orange water droplet suspended mid-fall",
     accent: "orange",
     featured: false,
-    floor: 2,
   },
   {
     slug: "book-store",
@@ -204,7 +236,6 @@ export const projects: Project[] = [
       "a stack of cloth-bound books with orange and tiffany spines, one open with soft light pouring out",
     accent: "tiffany",
     featured: false,
-    floor: 4,
   },
   {
     slug: "cabieeee",
@@ -217,7 +248,6 @@ export const projects: Project[] = [
       "a minimal glossy toy-like taxi on a dark glowing road map with an orange route line and tiffany pin",
     accent: "orange",
     featured: false,
-    floor: 4,
   },
   {
     slug: "gideon-ai-desktop-assistant",
@@ -230,7 +260,6 @@ export const projects: Project[] = [
       "a floating glowing sound-wave orb above a sleek desk lamp-like device, orange waveform ring, tiffany core",
     accent: "tiffany",
     featured: false,
-    floor: 3,
   },
   {
     slug: "webrtc-video-rooms",
@@ -243,7 +272,6 @@ export const projects: Project[] = [
       "several floating rounded-rectangle glass panes arranged in a grid, connected by thin orange lines, tiffany reflections",
     accent: "orange",
     featured: false,
-    floor: 4,
   },
   {
     slug: "algorithmic-trading-bot",
@@ -256,13 +284,8 @@ export const projects: Project[] = [
       "a small chrome clockwork robot hand placing a coin onto glowing chart lines, orange and tiffany accents",
     accent: "tiffany",
     featured: false,
-    floor: 1,
   },
 ];
-
-/** order within a floor: featured first, then as listed */
-export const projectsOnFloor = (floor: number) =>
-  projects.filter((p) => p.floor === floor).sort((a, b) => Number(b.featured) - Number(a.featured));
 
 export const featuredProjects = projects.filter((p) => p.featured);
 export const otherProjects = projects.filter((p) => !p.featured);

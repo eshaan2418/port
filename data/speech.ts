@@ -38,12 +38,8 @@ export const speech: SpeechLine[] = [
   { id: "exp-prince-aly-khan-hospital", text: "prince aly khan hospital: secure healthcare workflows and responsive react interfaces.", approved: false },
   { id: "exp-aiesec", text: "aiesec, where i was vp of technology, supporting global exchange programs.", approved: false },
 
-  // Projects Gallery (on arriving at a hall; each frame then reads its project's description, below)
-  { id: "proj-floor-1", text: "fintech & trading. pick a frame to take a closer look.", approved: false },
-  { id: "proj-floor-2", text: "systems & embedded. pick a frame to take a closer look.", approved: false },
-  { id: "proj-floor-3", text: "ml & ai. pick a frame to take a closer look.", approved: false },
-  { id: "proj-floor-4", text: "full-stack & apps. pick a frame to take a closer look.", approved: false },
-  { id: "proj-floor-5", text: "play & math. pick a frame to take a closer look.", approved: false },
+  // Projects Gallery (on arriving; each frame then reads its project's own description, below)
+  { id: "proj-hall", text: "this is the projects gallery. pick a frame to take a closer look.", approved: false },
 
   // Extracurriculars Tower
   { id: "extra-records", text: "world champion in martial arts, and a guinness world records holder.", approved: false },

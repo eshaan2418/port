@@ -1,0 +1,22 @@
+# Eshaan Kapooswalla
+
+> engineering + community builder, Toronto, ON, CA. Portfolio: experience, projects, extracurriculars and education.
+
+## Machine-readable versions
+
+- [Agent version (HTML, no scripts needed)](/agent/)
+- [Full content in Markdown](/agent.md)
+- [Full content in Markdown (llms-full.txt)](/llms-full.txt)
+- [Structured data (JSON)](/agent.json)
+- [Index for LLMs](/llms.txt)
+
+## Human versions
+
+- [Normal website](/?view=list)
+- [3D city (free roam)](/?view=city)
+
+## Contact
+
+- [Email](mailto:eshaank@my.yorku.ca)
+- [LinkedIn](https://www.linkedin.com/in/eshaankap/)
+- [GitHub](https://github.com/eshaan2418)

@@ -2,14 +2,14 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
-import generated from "@/data/project-images.json";
 import { Brain, Cloud, DoorOpen, GraduationCap, Mailbox, Medal, Snowflake, Swords, type LucideIcon } from "lucide-react";
-import { projectsOnFloor, projects, type Project } from "@/data/projects";
+import { projects, type Project } from "@/data/projects";
+import { education } from "@/data/education";
 import { site, mailto } from "@/data/site";
 import { GitHubIcon, LinkedInIcon } from "@/components/icons";
 import { LogoMark } from "@/components/LogoMark";
 import { useTown } from "../state";
-import { EDUCATION_FLOORS, EXPERIENCE_FLOORS, EXTRA_FLOORS, PROJECTS_FLOORS, TOWERS, isTower, type TowerId } from "../interior/floors";
+import { EDUCATION_FLOORS, EXPERIENCE_FLOORS, EXTRA_FLOORS, TOWERS, isTower, type TowerId } from "../interior/floors";
 import { leaveInterior } from "../interior/transitions";
 import { Streaks } from "./InteriorHud";
 
@@ -72,6 +72,7 @@ export function TowerHud() {
     <>
       {streak && <Streaks key={streak.key} color={streak.color} onDone={() => setStreak(null)} />}
 
+      {tower.floors.length > 1 && (
       <nav
         aria-label={`${tower.title} floors`}
         className="absolute inset-x-0 bottom-[4.1rem] px-3 md:inset-x-auto md:top-1/2 md:right-6 md:bottom-auto md:-translate-y-1/2 md:px-0"
@@ -97,8 +98,12 @@ export function TowerHud() {
           ))}
         </ol>
       </nav>
+      )}
 
-      <section aria-label={`${tower.title}: ${meta.label}`} className="absolute inset-x-3 bottom-[7.9rem] md:inset-x-auto md:bottom-6 md:left-6 md:w-[23rem]">
+      <section
+        aria-label={tower.floors.length > 1 ? `${tower.title}: ${meta.label}` : tower.title}
+        className={`absolute inset-x-3 md:inset-x-auto md:bottom-6 md:left-6 md:w-[23rem] ${tower.floors.length > 1 ? "bottom-[7.9rem]" : "bottom-[4.1rem]"}`}
+      >
         <Plaque tower={interior} i={floor} />
       </section>
 
@@ -129,14 +134,6 @@ function FloorChip({ tower, i, current }: { tower: TowerId; i: number; current: 
       </>
     );
   }
-  if (tower === "projects") {
-    const f = PROJECTS_FLOORS[i];
-    return (
-      <>
-        <span className="text-[0.74rem] whitespace-nowrap lowercase md:text-[0.82rem]">{f.label}</span>
-      </>
-    );
-  }
   if (tower === "extracurriculars") {
     const f = EXTRA_FLOORS[i];
     const Icon = EXTRA_ICON[f.id];
@@ -160,7 +157,7 @@ function FloorChip({ tower, i, current }: { tower: TowerId; i: number; current: 
 /** the floor's plaque; on phones the long text folds away behind "more" */
 function Plaque({ tower, i }: { tower: TowerId; i: number }) {
   if (tower === "experience") return <ExperiencePlaque i={i} />;
-  if (tower === "projects") return <ProjectsPlaque i={i} />;
+  if (tower === "projects") return <ProjectsPlaque />;
   if (tower === "extracurriculars") return <ExtraPlaque i={i} />;
   return <EducationPlaque i={i} />;
 }
@@ -216,22 +213,39 @@ function ExperiencePlaque({ i }: { i: number }) {
 }
 
 /** the gallery: this floor's frames as a list (the "side list"), and the picked one */
-function ProjectsPlaque({ i }: { i: number }) {
-  const f = PROJECTS_FLOORS[i];
+/** the gallery: every project as a list (pick one and he walks you to its frame), and the picked one */
+function ProjectsPlaque() {
   const item = useTown((s) => s.item);
   const setItem = useTown((s) => s.setItem);
-  const list = projectsOnFloor(f.floor);
-  const picked = projects.find((p) => p.slug === item && p.floor === f.floor);
+  const picked = projects.find((p) => p.slug === item);
+  // phones: the 22 names fold away (so the hall stays visible); desktop always shows them
+  const [browse, setBrowse] = useState(false);
   return (
-    <div className={`${card} max-h-[46vh] overflow-y-auto px-4 py-3 md:max-h-[calc(100vh-9rem)] md:p-5`}>
-      <p className="micro-label text-[0.58rem] text-muted">projects gallery</p>
-      <p className="font-display text-[1.25rem] leading-tight lowercase">{f.label}</p>
-      <ul className="mt-2.5 flex flex-wrap gap-1.5">
-        {list.map((p) => (
+    <div className={`${card} max-h-[44vh] overflow-y-auto px-4 py-3 md:max-h-[calc(100vh-9rem)] md:p-5`}>
+      <div className="flex items-baseline justify-between gap-3">
+        <div>
+          <p className="micro-label text-[0.58rem] text-muted">projects gallery</p>
+          <p className="font-display text-[1.25rem] leading-tight lowercase">{projects.length} projects</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setBrowse((b) => !b)}
+          aria-expanded={browse}
+          aria-controls="gallery-list"
+          className="micro-label rounded-full border border-ink/20 px-2.5 py-1.5 text-[0.58rem] hover:bg-ink hover:text-cream md:hidden"
+        >
+          {browse ? "hide list" : "browse"}
+        </button>
+      </div>
+      <ul id="gallery-list" className={`mt-2.5 flex-wrap gap-1.5 ${browse ? "flex" : "hidden"} md:flex`}>
+        {projects.map((p) => (
           <li key={p.slug}>
             <button
               type="button"
-              onClick={() => setItem(p.slug)}
+              onClick={() => {
+                setItem(p.slug);
+                setBrowse(false);
+              }}
               aria-pressed={p.slug === item}
               className={`rounded-full border px-2.5 py-1 text-[0.74rem] transition-colors ${
                 p.slug === item ? "border-ink bg-ink text-cream" : "border-ink/20 hover:bg-ink/10"
@@ -243,35 +257,23 @@ function ProjectsPlaque({ i }: { i: number }) {
           </li>
         ))}
       </ul>
-      {picked ? <ProjectCard p={picked} /> : <p className="mt-3 text-[0.8rem] text-ink/70">pick a frame (or a name above) and he&apos;ll walk you over.</p>}
+      {picked ? <ProjectCard p={picked} /> : <p className="mt-3 text-[0.8rem] text-ink/70">pick a frame (or a name) and he&apos;ll walk you over.</p>}
     </div>
   );
 }
 
-/** written by scripts/generate-project-images.ts for every image that exists */
-const IMAGES = generated as Record<string, { blurDataURL?: string }>;
-
 function ProjectCard({ p }: { p: Project }) {
   const [openFor, setOpenFor] = useState<string | null>(null);
-  const meta = IMAGES[p.slug];
-  const open = openFor === p.slug; // phones: image + description fold away (he reads the description out)
+  // only a real image (added to /public/projects) is shown; otherwise no image box at all
+  const hasImage = useTown((s) => s.projectImages.includes(p.slug));
+  const open = openFor === p.slug; // phones: the description folds away (he reads it out)
   return (
     <article className="mt-3 border-t border-ink/10 pt-3">
-      <div className={`relative aspect-[16/9] overflow-hidden rounded-[10px] bg-ink ${open ? "block" : "hidden"} md:block`}>
-        {meta ? (
-          <Image
-            src={p.image}
-            alt={`Illustration for ${p.name}`}
-            fill
-            sizes="(min-width: 768px) 340px, 90vw"
-            placeholder={meta.blurDataURL ? "blur" : "empty"}
-            blurDataURL={meta.blurDataURL}
-            className="object-cover"
-          />
-        ) : (
-          <div aria-hidden="true" className="absolute inset-0" style={{ background: gradientFor(p) }} />
-        )}
-      </div>
+      {hasImage && (
+        <div className={`relative aspect-[16/9] overflow-hidden rounded-[10px] bg-ink ${open ? "block" : "hidden"} md:block`}>
+          <Image src={p.image} alt={`${p.name}`} fill sizes="(min-width: 768px) 340px, 90vw" className="object-cover" />
+        </div>
+      )}
       <h3 className="mt-2.5 text-[1rem] font-semibold tracking-tight">{p.name}</h3>
       <p className={`mt-1 text-[0.82rem] leading-relaxed text-ink/80 ${open ? "block" : "hidden"} md:block`}>{p.description}</p>
       <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[0.62rem] tracking-[0.1em] text-muted uppercase">
@@ -281,7 +283,7 @@ function ProjectCard({ p }: { p: Project }) {
       </ul>
       <div className="mt-3 flex items-center gap-2">
         <a href={p.repoUrl} target="_blank" rel="noopener noreferrer" className={linkCls}>
-          <GitHubIcon size={13} /> view on github
+          <GitHubIcon size={13} /> view on github →
           <span className="sr-only"> (opens in a new tab)</span>
         </a>
         <button
@@ -297,15 +299,6 @@ function ProjectCard({ p }: { p: Project }) {
   );
 }
 
-/** same idea as the list view's placeholder: ink with a soft accent glow, seeded per project */
-export function gradientFor(p: Project) {
-  let h = 0;
-  for (const ch of p.slug) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  const accent = p.accent === "orange" ? "#F37021" : "#81D8D0";
-  const gx = 30 + (h % 45);
-  const gy = 20 + ((h >> 5) % 50);
-  return `radial-gradient(70% 85% at ${gx}% ${gy}%, color-mix(in srgb, ${accent} 55%, transparent) 0%, transparent 60%), linear-gradient(160deg, #1c1b19 0%, #121212 70%)`;
-}
 
 function ExtraPlaque({ i }: { i: number }) {
   const f = EXTRA_FLOORS[i];
@@ -379,12 +372,7 @@ function EducationPlaque({ i }: { i: number }) {
       }
     >
       <dl className="mt-3 border-t border-ink/10 text-[0.82rem]">
-        {[
-          ["Degree", "B.Sc (Hons) Computer Science"],
-          ["Location", "Toronto, ON, Canada"],
-          ["Scholarship", "Tentanda Via Scholar ($120,000)"],
-          ["Honours", "Dean's Honor Roll"],
-        ].map(([k, v]) => (
+        {education.details.map(([k, v]) => (
           <div key={k} className="grid grid-cols-[6.2rem_1fr] gap-3 border-b border-ink/10 py-1.5">
             <dt className="micro-label pt-0.5 text-[0.55rem] text-muted">{k}</dt>
             <dd className="font-medium">{v}</dd>

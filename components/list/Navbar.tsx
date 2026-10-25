@@ -14,8 +14,8 @@ const LINKS = [
 
 /**
  * The list view's navbar: a solid ink bar fixed to the top (it never moves
- * the page), the name, section links with the current one marked, and the
- * way back into the city. On phones the links fold into a menu. If the list
+ * the page), the name, section links with the current one marked, and
+ * "switch mode" (back to the chooser). On phones the links fold into a menu. If the list
  * is showing by default (reduced motion, no WebGL, a slow device) the reason
  * sits in a thin line under the bar.
  */
@@ -51,13 +51,27 @@ export function Navbar() {
   }, [open]);
 
   const back = (
-    <button
-      type="button"
-      onClick={() => setMode("town")}
-      className="btn inline-flex h-10 shrink-0 items-center rounded-full bg-orange px-5 text-[0.9rem] font-semibold text-ink transition-colors hover:bg-cream"
-    >
-      {reason ? "Enter the city anyway" : "Back to the city"} <span aria-hidden="true" className="ml-1.5">→</span>
-    </button>
+    <span className="flex flex-wrap items-center gap-2">
+      {reason && (
+        <button
+          type="button"
+          onClick={() => {
+            useTown.setState({ chosen: true }); // they asked for it: skip the slow-device check
+            setMode("town");
+          }}
+          className="btn inline-flex h-10 shrink-0 items-center rounded-full border border-cream/40 px-4 text-[0.88rem] font-semibold text-cream transition-colors hover:bg-cream hover:text-ink"
+        >
+          Enter the city anyway
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={() => setMode("choose")}
+        className="btn inline-flex h-10 shrink-0 items-center rounded-full bg-orange px-5 text-[0.9rem] font-semibold text-ink transition-colors hover:bg-cream"
+      >
+        Switch mode
+      </button>
+    </span>
   );
 
   return (

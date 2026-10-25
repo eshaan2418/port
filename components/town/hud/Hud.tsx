@@ -262,6 +262,13 @@ function TopRight() {
         <List size={16} strokeWidth={1.8} aria-hidden="true" />
         view as list
       </button>
+      <button
+        type="button"
+        onClick={() => setMode("choose")}
+        className={`${pill} inline-flex h-9 items-center px-3.5 text-[0.78rem] font-medium md:h-11 md:px-4 md:text-[0.85rem] transition-colors hover:bg-ink hover:text-cream`}
+      >
+        switch mode
+      </button>
     </div>
   );
 }

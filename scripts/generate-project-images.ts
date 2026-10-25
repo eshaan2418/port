@@ -141,7 +141,7 @@ async function main() {
     await fs.readFile(META_FILE, "utf8").catch(() => "{}"),
   );
 
-  const queue = projects.filter((p) => !only || p.slug === only);
+  const queue = projects.filter((p) => p.imagePrompt && (!only || p.slug === only)); // (not wired into any view)
   for (const p of queue) {
     const file = path.join(OUT_DIR, `${p.slug}.webp`);
     if (!force && (await exists(file))) {

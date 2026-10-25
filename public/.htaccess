@@ -1,6 +1,11 @@
 # Hostinger (LiteSpeed / Apache) settings for the static export.
 # This file is copied into dist/ by `npm run build`; keep it when you upload.
 
+# the machine-readable files: right content types
+AddType text/markdown;charset=utf-8 .md
+AddType text/plain;charset=utf-8 .txt
+AddType application/json;charset=utf-8 .json
+
 # the site's own 404 page
 ErrorDocument 404 /404.html
 

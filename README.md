@@ -1,8 +1,8 @@
 # eshaan's city
 
-An interactive low-poly New York City block you walk around in: there is no landing page. Next.js 16 (App Router) · TypeScript · Tailwind v4 · React Three Fiber + drei · zustand · GSAP (UI only). A plain DOM "list view" carries all the content too (SEO, screen readers, reduced motion, no WebGL).
+An interactive low-poly New York City block you walk around in. A first-load chooser offers **free roam** (the 3D city), the **normal website** (a list view) or an **AI agent version** (`/agent`). Next.js 16 (App Router) · TypeScript · Tailwind v4 · React Three Fiber + drei · zustand · GSAP (UI only). A plain DOM "list view" carries all the content too (SEO, screen readers, reduced motion, no WebGL).
 
-> Status: **milestones 1–7**: the block, time of day, Home and the cinematic intro, the Experience Tower (10 floors), the Projects Gallery (5 floors), the Extracurriculars Tower (5 animated floors), Education + the post-office contact room, and the polish pass (list view, slow-device fallback, accessibility, SEO).
+> Status: **milestones 1–7**: the block, time of day, Home and the cinematic intro, the Experience Tower (10 floors), the Projects Gallery (one hall, 22 projects), the Extracurriculars Tower (5 animated floors), Education + the post-office contact room, and the polish pass (list view, slow-device fallback, accessibility, SEO).
 
 ## Run it
 
@@ -31,8 +31,9 @@ Everything lives in `/data`. No copy is hard-coded in components.
 | File | What |
 |---|---|
 | `data/experiences.ts` | Experience rows, 3D gift tags, mobile cards. `role` is the short label shown everywhere; `summary` is the card body; `link` renders a real `<a>` (new tab, `rel="noopener noreferrer"`). Array order is the display order everywhere (newest first). |
-| `data/projects.ts` | Projects. `floor` picks its gallery hall (`PROJECT_FLOORS` maps it to the theme: fintech & trading, systems & embedded, ML & AI, full-stack & apps, play & math; it's an internal key, never shown); `featured` ones get the big frames, large list tiles and a `/projects/<slug>` case-study placeholder. `imagePrompt` feeds the image script. |
-| `components/town/interior/floors.ts` | What's on each tower floor: Experience rooms come from `data/experiences.ts` (array order = top to bottom); extracurricular plaques (and the optional `link` on the records floor for a source); floor moods. |
+| `data/projects.ts` | Projects, in display order (the same fixed order everywhere: the list, the gallery wall, the agent view). `featured` ones get the bigger cards / frames and a `/projects/<slug>` case-study placeholder. |
+| `data/extracurriculars.ts`, `data/education.ts` | Extracurricular facts and education details, shared by the city, the list view and the agent view. |
+| `components/town/interior/floors.ts` | What's on each tower floor: Experience rooms come from `data/experiences.ts` (array order = top to bottom); extracurriculars from `data/extracurriculars.ts` (the optional `link` on the records floor is for a source); floor moods. |
 | `data/speech.ts` | Every speech-bubble line (see below). |
 | `data/site.ts` | Name, email, LinkedIn, GitHub. |
 | `components/Education.tsx`, `components/Contact.tsx` | Education facts and contact copy. |
@@ -58,17 +59,7 @@ The two monograms are Space Grotesk initials outlined to paths (self-contained S
 
 ## Project images
 
-Generated once at build-prep time, never at runtime, then committed.
-
-```bash
-# .env.local: IMAGE_PROVIDER=openai|gemini|replicate plus the matching key
-#   OPENAI_API_KEY / GEMINI_API_KEY / REPLICATE_API_TOKEN
-npm run images                      # only missing images
-npm run images -- --force           # regenerate everything
-npm run images -- --only=distdata   # one project (combine with --force to redo it)
-```
-
-Writes `public/projects/<slug>.webp` (1600×1000) and a blur placeholder into `data/project-images.json`. The shared style prefix is in `scripts/generate-project-images.ts`. Until an image exists, its tile shows an ink + accent gradient.
+None are used. Every view shows text-first project cards (name, description, tags, "view on github →"), and the 3D frames are typographic panels. If you ever add a real image at `public/projects/<slug>.webp`, it's picked up at build time and shown on that project's card, plaque and frame; otherwise there's no image box at all. `scripts/generate-project-images.ts` (`npm run images`) is still in the repo but nothing depends on it.
 
 ## The city
 
@@ -80,11 +71,15 @@ Writes `public/projects/<slug>.webp` (1600×1000) and a blur placeholder into `d
 - `components/town/intro/*`: the opening sequence (timeline, choreography, skip / handoff).
 - `components/town/interior/Tower.tsx`: the shared tower cutaway: stacked floors with the front removed, an elevator on every floor, a camera that frames one floor at a time, his walk-out / arrival choreography and the speech anchor. `interior/<building>/*Interior.tsx` furnish each floor (`interior/kit.tsx` is the little furniture kit). `hud/TowerHud.tsx` is the floor selector, the plaques and "back outside".
 - UI type: Manrope (UI), IBM Plex Mono (clocks, years, labels) and Fraunces (titles), via `next/font`.
-- `components/town/TownShell.tsx`: city vs. list. `?view=list` deep-links to the list; reduced motion / no WebGL default to it with a notice and an "enter the town anyway" button.
+- `components/town/TownShell.tsx` + `components/chooser/Chooser.tsx`: the mode chooser and what shows at `/` (see **Modes** below).
 
 All signage is generic and stylised: no real logos, transit branding or landmark names. Street signs use palette names (tiffany ave, orange st, cream st, ink pl).
 
-**List view and fallbacks.** "view as list" (or `?view=list`) is a fast DOM page with everything: experiences newest first, projects by theme, extracurriculars, education and contact. It has its own look, in solid colours: a fixed ink navbar (section links with the current one underlined in orange, "back to the city", a menu on phones), a cream page, paper cards with a hairline, ink text, Hermès-orange accents and soft-Tiffany tags; Fraunces headings and DM Sans body (a local OFL file in `app/fonts/`, loaded with `next/font/local`). Experiences stack one per row; projects are text-only cards (the generated images are used in the 3D gallery). It's the default for `prefers-reduced-motion` and browsers without WebGL, and the city switches to it if the device is too slow (the median frame time of the first ~60 frames after load is over ~42 ms), each with a notice and "enter the town anyway". `?view=city` forces the city. The list is always in the DOM (visually hidden in city mode) for screen readers and search engines; the canvas is `aria-hidden`.
+**Modes.** The first load shows a full-screen chooser: **free roam** (the 3D city; a "works best on a laptop" note on touch or modest hardware, judged from `hardwareConcurrency`, `deviceMemory` and the pointer type), **normal website** (the list view) or **ai agent version** (`/agent`). Cards: Tab + Enter or the keys 1 / 2 / 3. "Remember my choice" saves it in localStorage (`site-mode`); every view has a "switch mode" button (`/?choose=1`). The 3D bundle is only downloaded once free roam is picked, and free roam starts the intro; the other two skip it. `?view=list`, `?view=city` and `?view=agent` deep-link past the chooser. Reduced motion and no WebGL still go straight to the list (with a notice), and a slow device drops from the city to the list. The chooser is an overlay: all content stays in the server-rendered HTML at `/`.
+
+**Agent version.** `/agent` is server-rendered semantic HTML in IBM Plex Mono, Tiffany on ink, with no canvas or scripts needed. The same content is at `/agent.md` and `/llms-full.txt` (Markdown) and `/agent.json` (structured data), with an index at `/llms.txt`. There's also JSON-LD (`Person`, `sameAs` LinkedIn and GitHub) on `/` and `/agent`, `<link rel="alternate">` tags, `/sitemap.xml` and `/robots.txt` (allow all). All of it is generated at build time from `/data/*` by `lib/agent.ts`, so there's one source of truth. Build with `NEXT_PUBLIC_SITE_URL` set to make the links in these files absolute.
+
+**List view and fallbacks.** The normal website (or `?view=list`) is a fast DOM page with everything: experiences newest first, all projects, extracurriculars, education and contact. It has its own look, in solid colours: a fixed ink navbar (section links with the current one underlined in orange, "switch mode", a menu on phones), a cream page, paper cards with a hairline, ink text, Hermès-orange accents and soft-Tiffany tags; Fraunces headings and DM Sans body (a local OFL file in `app/fonts/`, loaded with `next/font/local`). Experiences stack one per row; projects are text-only cards. It's the default for `prefers-reduced-motion` and browsers without WebGL, and the city switches to it if the device is too slow (the median frame time of the first ~60 frames after load is over ~42 ms), each with a notice and "enter the city anyway". `?view=city` forces the city. The list is always in the DOM (visually hidden in city mode) for screen readers and search engines; the canvas is `aria-hidden`.
 
 **Controls.** Desktop: WASD / arrows, Shift to run, click the ground to walk, click a building to walk to its door, E to enter (Esc or E to leave), drag to orbit (full 360°), right-drag / middle-drag / Shift + drag to pan (Shift + two-finger scroll on a trackpad), wheel to zoom, **V** for first person (pointer-lock mouse look; Esc to exit), **F** or Space to bring the camera back to Eshaan, **?** for the how-to card. Mobile: joystick, tap to walk, tap a door, one-finger drag to orbit, two-finger drag to pan, pinch to zoom; in first person, drag on the right half to look. The fast-travel bar works everywhere and is keyboard accessible; on arrival the camera turns to the building's sign for ~1.5 s.
 
@@ -94,10 +89,10 @@ All signage is generic and stylised: no real logos, transit branding or landmark
 
 **The intro.** Every load opens inside the Home cutaway on what he's doing right now in Toronto (always real time, never a previously scrubbed one). He notices you ("!"), says the line for that activity (`intro_*` in `data/speech.ts`), gets up and heads out; the cutaway fades to the street, his front door opens, he comes down the stoop, waves, and sets off along the sidewalk while the camera swings round behind him. Then the HUD fades in and the "how to move around" card opens; its button is the first interaction, which unlocks audio (sound itself stays off until toggled). About 15–17 s. Throughout, everything is hidden and locked (only letterbox bars and the speech bubble show, and every key / pointer is ignored) except a small "skip" (bottom right, after ~3 s), Esc and Enter, which jump straight to the handoff. The words go to a polite live region for screen readers. Reduced motion skips it entirely (as does the list view). Timings, the stroll and the camera are in `components/town/intro/intro.ts`; the in-house moves (sitting up, standing, the way to the stairs) are `INTRO_MOVES` in `interior/HomeInterior.tsx`.
 
-**The towers.** Walk up to a door (or use the fast-travel bar) and press E / tap: you fade into a dollhouse cutaway. The floor selector (right side on desktop, a strip at the bottom on phones; ↑ / ↓ keys too) sends him up and down: the view slides to the floor with motion streaks and the floor's tint, the elevator opens, he walks out, turns to you and says his line. Every floor has a plaque with the real details and links.
+**The towers.** Walk up to a door (or use the fast-travel bar) and press E / tap: you fade into a dollhouse cutaway. In the towers with several floors, the floor selector (right side on desktop, a strip at the bottom on phones; ↑ / ↓ keys too) sends him up and down: the view slides to the floor with motion streaks and the floor's tint, the elevator opens, he walks out, turns to you and says his line. Every floor has a plaque with the real details and links.
 
 - **Experience Tower:** 10 floors, newest first (Cohere at the top down to AIESEC), each a small themed room. The only real logos in 3D are the small brass plaques by the elevator.
-- **Projects Gallery:** 5 themed gallery halls (fintech & trading at the bottom up to play & math at the top), with framed screens (the featured four are bigger). Click a frame or pick a name on the plaque: he walks over and reads the project's description, and the plaque shows its image, tags and GitHub link. Frames show `/public/projects/<slug>.webp` once generated, else the gradient.
+- **Projects Gallery:** one hall (no floor selector) with all 22 projects hung in three rows on the back wall, in the fixed order from `data/projects.ts`, the featured four wider. Each frame is a typographic panel: the name in the gallery's board font, the tech tags, and an orange or Tiffany border. Click a frame or pick a name on the plaque: he walks over, the camera moves in, he reads the project's description, and the plaque shows the tags and the GitHub link.
 - **Extracurriculars Tower:** hall of records (spotlights snap on, a medal turns, gold confetti), dojo (lanterns, tatami, petals; a kata and a slow-motion board break), the rink (laps with speed trails; inline → ice skates mid-way with a spin and an ice spray), brain gym (self-writing chalkboard, orbiting symbols, an ICPC-style scoreboard, a balloon per solved problem), AWS community hall (silhouettes fill the chairs as the counter climbs to 200+). Each plays from the moment he steps out of the elevator.
 - **Education:** York University upstairs (cap and books), the post office downstairs: the contact card ("Send me a note →", LinkedIn, GitHub, © 2026) and a mailbox that sends a letter flying when he waves.
 

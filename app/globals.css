@@ -215,7 +215,25 @@ html[data-initial-view="list"] [data-list-shell][data-pending] {
   clip: auto;
   white-space: normal;
 }
-html[data-initial-view="list"] [data-pending-cover] {
+/* the mode chooser: ink focus rings on the cream page */
+.chooser :focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 4px;
+}
+.chooser:focus {
+  outline: none;
+}
+
+/* before hydration: the chooser (server-rendered) shows by default; the
+   cream cover only for a remembered / forced city, and neither when the
+   list was picked */
+[data-pending-cover] {
+  display: none;
+}
+html[data-initial-view="city"] [data-pending-cover] {
+  display: block;
+}
+html[data-initial-view] [data-chooser][data-pending] {
   display: none;
 }
 

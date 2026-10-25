@@ -40,6 +40,8 @@ export type FloorDef = {
   script?: (t: number) => ActorFrame;
   /** things he walks up to when the HUD selects them (gallery frames) */
   targets?: Record<string, { pos: V3; yaw: number }>;
+  /** where the camera moves in to when an item is picked (centre x, y, and the width to fit) */
+  focus?: Record<string, { x: number; y: number; w: number }>;
   itemSpeech?: (item: string) => string;
   /** camera moves for a hero moment: push in (0–1 of the distance), lift, shake */
   cam?: (t: number) => { push?: number; dy?: number };
@@ -202,17 +204,29 @@ export function Tower({
     // on desktop the floor selector takes the right ~21% of the screen, so the
     // room is framed in what's left (the camera slides right by that much)
     const aspect = size.width / Math.max(1, size.height);
-    const side = size.width >= 768 ? 0.21 : 0;
+    // single-room buildings (the gallery) have no selector: their plaque on the left takes ~26% instead
+    const side = size.width < 768 ? 0 : floors.length > 1 ? 0.21 : -0.26;
     const tanH = Math.tan(THREE.MathUtils.degToRad(45 / 2));
-    const fitW = (w / 2 + 0.6) / (tanH * aspect * (1 - side));
+    const fitW = (w / 2 + 0.6) / (tanH * aspect * (1 - Math.abs(side)));
     const cm = def.cam?.(t) ?? {};
-    const dist = THREE.MathUtils.clamp(fitW * 1.06, 8.6, 19) * (1 - (cm.push ?? 0));
-    const halfView = dist * tanH * aspect;
-    const slack = Math.max(0, w / 2 + 0.4 - halfView);
-    const cx = stage.x + THREE.MathUtils.clamp(st.pos.x - stage.x, -slack, slack) + halfView * side;
     const fy = levelY(current);
-    st.camPos.set(cx + 0.2, fy + 1.55 + (dist - 8.6) * 0.05 + (cm.dy ?? 0), stage.z + dist);
-    st.camLook.set(cx, fy + 1.4 + (cm.dy ?? 0) * 0.5, stage.z - 0.3);
+    const fo = st.item ? def.focus?.[st.item] : undefined;
+    if (fo) {
+      // moved in on the picked item, fitting it (and him beside it)
+      const fd = Math.max(6.2, (fo.w / 2 + 0.5) / (tanH * aspect * (1 - Math.abs(side))));
+      const hv = fd * tanH * aspect;
+      // phones: the plaque fills the lower half, so the frame sits in the top half
+      const low = size.width < 768 ? -1.1 : 0;
+      st.camPos.set(stage.x + fo.x + hv * side, fy + fo.y + 0.2 + low, stage.z + fd);
+      st.camLook.set(stage.x + fo.x + hv * side, fy + fo.y - 0.1 + low, stage.z - 0.3);
+    } else {
+      const dist = THREE.MathUtils.clamp(fitW * 1.06, 8.6, 19) * (1 - (cm.push ?? 0));
+      const halfView = dist * tanH * aspect;
+      const slack = Math.max(0, w / 2 + 0.4 - halfView);
+      const cx = stage.x + THREE.MathUtils.clamp(st.pos.x - stage.x, -slack, slack) + halfView * side;
+      st.camPos.set(cx + 0.2, fy + 1.55 + (dist - 8.6) * 0.05 + (cm.dy ?? 0), stage.z + dist);
+      st.camLook.set(cx, fy + 1.4 + (cm.dy ?? 0) * 0.5, stage.z - 0.3);
+    }
     if (r.shake > 0) {
       r.shake = Math.max(0, r.shake - dt * 2.5);
       const k = r.shake * 0.12;

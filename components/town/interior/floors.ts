@@ -1,5 +1,5 @@
 import { experiences, type Experience } from "@/data/experiences";
-import { PROJECT_FLOORS } from "@/data/projects";
+import { extracurriculars } from "@/data/extracurriculars";
 import type { BuildingId } from "../world/layout";
 
 /**
@@ -46,39 +46,26 @@ export const EXPERIENCE_FLOORS: (FloorMeta & { exp: Experience })[] = experience
   exp: e,
 }));
 
-/* ── Projects Gallery: floor 5 (top) … floor 1 (ground) ───────────────── */
-const PROJ_MOOD = ["#2E5E4E", "#384A6B", "#5B3F7A", "#B0603C", "#C9A227"];
-export const PROJECTS_FLOORS: (FloorMeta & { floor: number })[] = [...PROJECT_FLOORS].reverse().map((f) => ({
-  id: `floor-${f.floor}`,
-  label: f.theme,
-  mood: PROJ_MOOD[f.floor - 1],
-  speech: `proj-floor-${f.floor}`,
-  floor: f.floor,
-}));
+/* ── Projects Gallery: one hall with every project ─────────────────────── */
+export const PROJECTS_FLOORS: FloorMeta[] = [{ id: "hall", label: "projects gallery", mood: "#2E5E4E", speech: "proj-hall" }];
 
 /* ── Extracurriculars Tower: hall of records on top ───────────────────── */
-export const EXTRA_FLOORS: (FloorMeta & { link?: string; plaque: string[] })[] = [
-  {
-    id: "records",
-    label: "hall of records",
-    mood: "#C99A2E", // gold
-    speech: "extra-records",
-    plaque: ["world champion, martial arts", "Guinness World Records holder"],
-    link: "", // optional: a source link for the record, add it here later
-  },
-  { id: "dojo", label: "dojo", sub: "martial arts", mood: "#B8352E", speech: "extra-dojo", plaque: ["martial arts", "world champion"] },
-  { id: "rink", label: "the rink", sub: "skating", mood: "#8CCBEA", speech: "extra-rink", plaque: ["speed inline roller skater", "loves ice skating"] },
-  { id: "brain", label: "brain gym", sub: "ICPC · math", mood: "#3E6B52", speech: "extra-brain", plaque: ["ICPC", "competitive programming", "math"] },
-  {
-    id: "aws",
-    label: "aws community hall",
-    sub: "200+ members",
-    mood: "#E8EEF4", // cloud white
-    speech: "extra-aws",
-    plaque: ["AWS Student Builder Groups (formerly Cloud Club)", "200+ member cloud community"],
-    link: "https://awsyorkucloud.com/",
-  },
-];
+const EXTRA_MOOD: Record<string, { mood: string; sub?: string }> = {
+  records: { mood: "#C99A2E" }, // gold
+  dojo: { mood: "#B8352E", sub: "martial arts" }, // lantern red
+  rink: { mood: "#8CCBEA", sub: "skating" }, // ice blue
+  brain: { mood: "#3E6B52", sub: "ICPC · math" }, // chalk green
+  aws: { mood: "#E8EEF4", sub: "200+ members" }, // cloud white
+};
+export const EXTRA_FLOORS: (FloorMeta & { link?: string; plaque: string[] })[] = extracurriculars.map((x) => ({
+  id: x.id,
+  label: x.label,
+  sub: EXTRA_MOOD[x.id]?.sub,
+  mood: EXTRA_MOOD[x.id]?.mood ?? "#5FB8AE",
+  speech: `extra-${x.id}`,
+  plaque: x.facts,
+  link: x.link,
+}));
 
 /* ── Education (+ the post-office contact room on the ground floor) ───── */
 export const EDUCATION_FLOORS: FloorMeta[] = [
@@ -88,7 +75,7 @@ export const EDUCATION_FLOORS: FloorMeta[] = [
 
 export const TOWERS: Record<TowerId, { floors: FloorMeta[]; start: number; title: string }> = {
   experience: { floors: EXPERIENCE_FLOORS, start: 0, title: "experience tower" },
-  projects: { floors: PROJECTS_FLOORS, start: PROJECTS_FLOORS.length - 1, title: "projects gallery" },
+  projects: { floors: PROJECTS_FLOORS, start: 0, title: "projects gallery" },
   extracurriculars: { floors: EXTRA_FLOORS, start: 0, title: "extracurriculars tower" },
   education: { floors: EDUCATION_FLOORS, start: 0, title: "education" },
 };

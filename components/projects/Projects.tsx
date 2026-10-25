@@ -1,25 +1,20 @@
-import { PROJECT_FLOORS, projects, projectsOnFloor } from "@/data/projects";
+import { projects } from "@/data/projects";
+import { existingProjectImages } from "@/lib/project-images";
 import { Section } from "@/components/list/Section";
 import { ProjectCard } from "./ProjectCard";
 
-/** Projects in the list view, grouped by the gallery's themes: one card each. */
+/** Projects in the list view: one flat set, in the fixed order from data/projects.ts (featured four wider). */
 export function Projects() {
+  const images = new Set(existingProjectImages());
   return (
     <Section anchor="projects" id="projects-heading" title="projects" kicker={`${projects.length} repositories`}>
-      <div className="space-y-12">
-        {PROJECT_FLOORS.map((f) => (
-          <div key={f.floor}>
-            <h3 className="micro-label text-ink/70">{f.theme}</h3>
-            <ul className="mt-4 grid gap-4 sm:grid-cols-2">
-              {projectsOnFloor(f.floor).map((p) => (
-                <li key={p.slug} className={p.featured ? "sm:col-span-2" : ""}>
-                  <ProjectCard project={p} />
-                </li>
-              ))}
-            </ul>
-          </div>
+      <ul className="grid gap-4 sm:grid-cols-2">
+        {projects.map((p) => (
+          <li key={p.slug} className={p.featured ? "sm:col-span-2" : ""}>
+            <ProjectCard project={p} hasImage={images.has(p.slug)} />
+          </li>
         ))}
-      </div>
+      </ul>
     </Section>
   );
 }

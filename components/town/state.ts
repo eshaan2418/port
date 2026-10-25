@@ -11,7 +11,8 @@ import type { HomeRoom } from "@/lib/schedule";
  * React renders.
  */
 
-export type ViewMode = "town" | "list";
+/** "choose" = the first-load mode chooser (free roam / normal website / agent) */
+export type ViewMode = "choose" | "town" | "list";
 /** time-appropriate idle he slips into outdoors when left alone */
 export type IdlePose = "coffee" | "stretch" | "sunset" | "stargaze" | "wave";
 
@@ -37,6 +38,8 @@ type TownState = {
   listReason: string | null;
   /** the visitor chose the city themselves ("enter anyway", ?view=city): don't auto-switch */
   chosen: boolean;
+  /** slugs with a real image in /public/projects (found at build time; empty = no images anywhere) */
+  projectImages: string[];
   loading: number; // 0..1
   ready: boolean;
   nearDoor: BuildingId | null;
@@ -110,10 +113,11 @@ type TownState = {
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
 export const useTown = create<TownState>((set, get) => ({
-  mode: "town",
+  mode: "choose",
   checked: false,
   listReason: null,
   chosen: false,
+  projectImages: [],
   loading: 0,
   ready: false,
   nearDoor: null,
@@ -137,7 +141,7 @@ export const useTown = create<TownState>((set, get) => ({
   sound: false,
   volume: 0.6,
 
-  setMode: (mode, reason = null) => set({ mode, listReason: reason, chosen: get().chosen || (mode === "town" && reason === null && get().checked) }),
+  setMode: (mode, reason = null) => set({ mode, listReason: reason }),
   setLoading: (v) => set({ loading: Math.max(get().loading, v) }),
   setReady: () => set({ ready: true, loading: 1 }),
   setNearDoor: (id) => get().nearDoor !== id && set({ nearDoor: id }),
