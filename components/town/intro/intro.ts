@@ -5,6 +5,7 @@ import { line } from "@/data/speech";
 import { runtime, useTown, type IntroPhase } from "../state";
 import { buildingById, placement, toWorld } from "../world/layout";
 import { fadeSwap, speak } from "../interior/transitions";
+import { startTutorial, tutorialDone } from "../hud/Tutorial";
 
 /**
  * The opening sequence, played once per page load:
@@ -272,7 +273,7 @@ function handoff(instant: boolean) {
     c.pan.x = c.pan.z = 0;
   }
   const unfinished = natural && runtime.introWalk; // (a slow frame) let him finish the last steps
-  Object.assign(p, { y: 0, idle: null });
+  Object.assign(p, { y: 0, idle: null, flying: false, vx: 0, vy: 0, vz: 0, thrust: 0 });
   if (!unfinished) Object.assign(p, { speed: 0, moving: false });
   runtime.introWalk = null;
   runtime.input.keys.clear();
@@ -283,7 +284,9 @@ function handoff(instant: boolean) {
   intro.done = true;
   intro.skipping = false;
   s.setIntroPhase(null);
-  s.openStart(); // after every intro
+  // first visit: he teaches the controls himself; after that, the "how to move around" card
+  if (tutorialDone()) s.openStart();
+  else startTutorial();
 }
 
 /** the site is falling back to the list (a weak device): drop the intro, ready for "enter anyway" */

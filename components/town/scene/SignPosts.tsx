@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { SIGN_POSTS, type SignPost } from "../world/layout";
 import { getMats } from "./materials";
 import { SignBoard, signWidth } from "./Buildings";
+import { signColliders } from "../world/physics";
 
 const READABLE_AT = 12; // beyond this distance a board grows to stay legible
 const MAX_SCALE = 1.7;
@@ -26,13 +27,13 @@ export function SignPosts() {
   return (
     <>
       {SIGN_POSTS.map((s, i) => (
-        <Sign key={i} s={s} />
+        <Sign key={i} s={s} slot={i} />
       ))}
     </>
   );
 }
 
-function Sign({ s }: { s: SignPost }) {
+function Sign({ s, slot }: { s: SignPost; slot: number }) {
   const m = getMats();
   const root = useRef<THREE.Group>(null);
   const board = useRef<THREE.Group>(null);
@@ -53,7 +54,13 @@ function Sign({ s }: { s: SignPost }) {
     const maxTurn = Math.asin(THREE.MathUtils.clamp((s.wallGap - 0.2) / (half.current * scale), 0, 1));
     g.rotation.y = s.normalYaw + THREE.MathUtils.clamp(rel, -maxTurn, maxTurn);
     g.scale.setScalar(scale);
+    // the board as an obstacle in the air, as big and turned as it's drawn right now
+    const hh = (s.size * 1.45 * scale) / 2;
+    signColliders[slot] = root.current!.visible
+      ? { kind: "box", x: s.x, z: s.z, hw: half.current * scale, hd: 0.1, rot: g.rotation.y, base: s.y - hh - 0.05, h: s.y + hh + 0.05, air: true }
+      : null;
   });
+  useEffect(() => () => void (signColliders[slot] = null), [slot]);
 
   return (
     <group ref={root} position={[s.x, 0, s.z]}>

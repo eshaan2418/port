@@ -30,6 +30,8 @@ import { StartCard } from "./StartCard";
 import { Fade, InteriorHud, SpeechBubble } from "./InteriorHud";
 import { skipIntro } from "../intro/intro";
 import { TowerHud } from "./TowerHud";
+import { FlyButtons } from "./FlyButtons";
+import { Tutorial } from "./Tutorial";
 
 const ICONS: Record<BuildingId, LucideIcon> = {
   home: House,
@@ -66,6 +68,8 @@ export function Hud({ touch }: { touch: boolean }) {
         <TowerHud />
         <Toast />
         {touch && !inside && !intro && <Joystick />}
+        {touch && !inside && !intro && <FlyButtons />}
+        {!intro && <Tutorial touch={touch} />}
       </div>
       <Letterbox intro={intro} />
       <SpeechBubble />

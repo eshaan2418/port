@@ -12,26 +12,27 @@ export type Project = {
   slug: string;
   name: string;
   description: string;
-  tags: string[];
   repoUrl: string;
   image: string;
   imagePrompt?: string;
   accent: "orange" | "tiffany";
   /** shown on the normal website (the 3D gallery and the agent files always list every project) */
   onWebsite?: boolean;
+  /** the normal website's 2-line card text: a condensation of `description` using only its own words */
+  shortDescription?: string;
 };
 
 const gh = (repo: string) => `https://github.com/eshaan2418/${repo}`;
 const img = (slug: string) => `/projects/${slug}.webp`;
 
 export const projects: Project[] = [
-  // newest five first (descriptions exactly as given; tags: the given language, else GitHub's main language)
+  // newest five first (descriptions exactly as given)
   {
     slug: "recall",
     onWebsite: true,
+    shortDescription: "On-device episodic visual memory for egocentric video.",
     name: "Recall",
     description: "On-device episodic visual memory for egocentric video: learned trigger, compact event memory, calibrated answers.",
-    tags: ["Python"],
     repoUrl: gh("Recall"),
     image: img("recall"),
     accent: "tiffany",
@@ -39,10 +40,10 @@ export const projects: Project[] = [
   {
     slug: "aegisfabric",
     onWebsite: true,
+    shortDescription: "Network-aware, secure, multimodal training.",
     name: "AegisFabric",
     description:
       "Network-aware, secure, multimodal training: joint placement/routing/checkpoint control on an emulated 3-site WAN (research artifact).",
-    tags: ["Python"],
     repoUrl: gh("AegisFabric"),
     image: img("aegisfabric"),
     accent: "orange",
@@ -50,10 +51,10 @@ export const projects: Project[] = [
   {
     slug: "qshield-x",
     onWebsite: true,
+    shortDescription: "FPGA-targeted union-find decoder for the surface code.",
     name: "qshield-x",
     description:
       "Formally verified, FPGA-targeted union-find decoder for the surface code: RTL, C++ golden model, Wasm runtime, V8 patch, and a measured hardware-vs-software answer.",
-    tags: ["Python"],
     repoUrl: gh("qshield-x"),
     image: img("qshield-x"),
     accent: "tiffany",
@@ -61,9 +62,9 @@ export const projects: Project[] = [
   {
     slug: "kubeml",
     onWebsite: true,
+    shortDescription: "Kubernetes-native ML orchestration.",
     name: "KubeML",
     description: "Kubernetes-native orchestration for observable, recoverable ML workloads.",
-    tags: ["Python"],
     repoUrl: gh("KubeML"),
     image: img("kubeml"),
     accent: "orange",
@@ -71,9 +72,9 @@ export const projects: Project[] = [
   {
     slug: "agentflow",
     onWebsite: true,
+    shortDescription: "AI agent workflows with durable DAG scheduling.",
     name: "agentflow",
     description: "AI agent workflows with durable DAG scheduling, Python workers, Kafka, PostgreSQL, FastAPI, Prometheus, and Grafana.",
-    tags: ["Go"],
     repoUrl: gh("agentflow"),
     image: img("agentflow"),
     accent: "tiffany",
@@ -83,7 +84,6 @@ export const projects: Project[] = [
     name: "FinanceSimple",
     description:
       "Full-stack fintech platform for tracking net worth, spending, debts, investments, crypto, real estate, and sandbox paper trading, with secure authentication, Row Level Security, financial analytics, report generation, and a polished dashboard.",
-    tags: ["React", "Spring Boot", "Gemini", "PostgreSQL"],
     // TODO(confirm): no public repo named FinanceSimple on github.com/eshaan2418 yet.
     repoUrl: gh("FinanceSimple"),
     image: img("financesimple"),
@@ -94,10 +94,10 @@ export const projects: Project[] = [
   {
     slug: "distdata",
     onWebsite: true,
+    shortDescription: "Fault-tolerant distributed database with consensus.",
     name: "DistData",
     description:
       "Fault-tolerant distributed database with consensus and transaction logic.",
-    tags: ["C++"],
     repoUrl: gh("DIstData"), // repo name on GitHub uses a capital I
     image: img("distdata"),
     imagePrompt:
@@ -107,10 +107,10 @@ export const projects: Project[] = [
   {
     slug: "eshaanos",
     onWebsite: true,
+    shortDescription: "Simulator exploring scheduling and memory.",
     name: "EshaanOS",
     description:
       "Educational operating system simulator exploring scheduling and memory management.",
-    tags: ["C++"],
     repoUrl: gh("EshaanOS"),
     image: img("eshaanos"),
     imagePrompt:
@@ -119,9 +119,10 @@ export const projects: Project[] = [
   },
   {
     slug: "jobber",
+    onWebsite: true,
+    shortDescription: "Job portal built with Spring Boot and React.",
     name: "Jobber",
     description: "Microservices job portal built with Spring Boot and React.",
-    tags: ["TypeScript", "Java"],
     repoUrl: gh("Jobber"),
     image: img("jobber"),
     imagePrompt:
@@ -131,9 +132,9 @@ export const projects: Project[] = [
   {
     slug: "edge-ai-model-compression",
     onWebsite: true,
+    shortDescription: "Optimized deep learning models for edge inference.",
     name: "Edge AI Model Compression & Deployment",
     description: "Optimized deep learning models for efficient edge inference.",
-    tags: ["Python"],
     repoUrl: gh("Edge-AI-Model-Compression-Deployment"),
     image: img("edge-ai-model-compression"),
     imagePrompt:
@@ -142,9 +143,10 @@ export const projects: Project[] = [
   },
   {
     slug: "fitmind-ai",
+    onWebsite: true,
+    shortDescription: "AI-powered fitness platform built using microservices.",
     name: "FitMind-AI",
     description: "AI-powered fitness platform built using microservices architecture.",
-    tags: ["JavaScript"],
     repoUrl: gh("FitMind-AI"),
     image: img("fitmind-ai"),
     imagePrompt:
@@ -154,9 +156,9 @@ export const projects: Project[] = [
   {
     slug: "morphunet",
     onWebsite: true,
+    shortDescription: "PyTorch U-Net architectures for image segmentation.",
     name: "MorphUNet",
     description: "PyTorch implementation of U-Net architectures for image segmentation.",
-    tags: ["Python"],
     repoUrl: gh("MorphUNet"),
     image: img("morphunet"),
     imagePrompt:
@@ -165,9 +167,10 @@ export const projects: Project[] = [
   },
   {
     slug: "shopsmart-ai",
+    onWebsite: true,
+    shortDescription: "Recommender system for e-commerce.",
     name: "ShopSmart-AI",
     description: "Machine learning recommender system for e-commerce.",
-    tags: ["Jupyter Notebook"],
     repoUrl: gh("ShopSmart-AI"),
     image: img("shopsmart-ai"),
     imagePrompt:
@@ -176,9 +179,10 @@ export const projects: Project[] = [
   },
   {
     slug: "stockpredictor",
+    onWebsite: true,
+    shortDescription: "Experimental ML-based stock price prediction system.",
     name: "StockPredictor",
     description: "Experimental ML-based stock price prediction system.",
-    tags: ["Python"],
     repoUrl: gh("StockPredictor"),
     image: img("stockpredictor"),
     imagePrompt:
@@ -189,7 +193,6 @@ export const projects: Project[] = [
     slug: "mandelbrotexplorer",
     name: "MandelbrotExplorer",
     description: "MATLAB visualization of the Mandelbrot set.",
-    tags: ["MATLAB"],
     repoUrl: gh("MandelbrotExplorer"),
     image: img("mandelbrotexplorer"),
     imagePrompt:
@@ -200,7 +203,6 @@ export const projects: Project[] = [
     slug: "tetrisplay",
     name: "TetrisPlay",
     description: "Classic Tetris game in C++.",
-    tags: ["C++"],
     repoUrl: gh("TetrisPlay"),
     image: img("tetrisplay"),
     imagePrompt:
@@ -211,7 +213,6 @@ export const projects: Project[] = [
     slug: "plantwateringsystem",
     name: "PlantWateringSystem",
     description: "Automated embedded system for plant irrigation.",
-    tags: ["Java"],
     repoUrl: gh("PlantWateringSystem"),
     image: img("plantwateringsystem"),
     imagePrompt:
@@ -220,9 +221,10 @@ export const projects: Project[] = [
   },
   {
     slug: "book-store",
+    onWebsite: true,
+    shortDescription: "Full-stack MERN application for managing book inventory.",
     name: "Book-Store",
     description: "Full-stack MERN application for managing book inventory.",
-    tags: ["JavaScript"],
     repoUrl: gh("Book-Store"),
     image: img("book-store"),
     imagePrompt:
@@ -231,9 +233,10 @@ export const projects: Project[] = [
   },
   {
     slug: "cabieeee",
+    onWebsite: true,
+    shortDescription: "Real-time cab-ordering mobile application.",
     name: "Cabieeee",
     description: "Real-time cab-ordering mobile application.",
-    tags: ["JavaScript"],
     repoUrl: gh("Cabieeee"),
     image: img("cabieeee"),
     imagePrompt:
@@ -242,9 +245,10 @@ export const projects: Project[] = [
   },
   {
     slug: "gideon-ai-desktop-assistant",
+    onWebsite: true,
+    shortDescription: "Voice-controlled desktop AI assistant.",
     name: "Gideon-AI-Desktop-Assistant",
     description: "Voice-controlled desktop AI assistant.",
-    tags: ["Python"],
     repoUrl: gh("Gideon-AI-Desktop-Assistant"),
     image: img("gideon-ai-desktop-assistant"),
     imagePrompt:
@@ -253,9 +257,10 @@ export const projects: Project[] = [
   },
   {
     slug: "webrtc-video-rooms",
+    onWebsite: true,
+    shortDescription: "Real-time video chat with screen sharing using WebRTC.",
     name: "WebRTC-Video-Rooms",
     description: "Real-time video chat with screen sharing using WebRTC.",
-    tags: ["JavaScript"],
     repoUrl: gh("WebRTC-Video-Rooms"),
     image: img("webrtc-video-rooms"),
     imagePrompt:
@@ -264,9 +269,10 @@ export const projects: Project[] = [
   },
   {
     slug: "algorithmic-trading-bot",
+    onWebsite: true,
+    shortDescription: "Algorithmic trading experiments.",
     name: "algorithmic-trading-bot",
     description: "Algorithmic trading experiments.",
-    tags: ["Python"],
     repoUrl: gh("algorithmic-trading-bot-"), // repo name on GitHub has a trailing dash
     image: img("algorithmic-trading-bot"),
     imagePrompt:
@@ -275,5 +281,6 @@ export const projects: Project[] = [
   },
 ];
 
-/** the 9 on the normal website, in display order (FinanceSimple's repo 404s, so MorphUNet is ninth) */
-export const websiteProjects = projects.filter((p) => p.onWebsite);
+/** the normal website's cards, in this order (FinanceSimple's repo 404s, so Gideon-AI-Desktop-Assistant takes its place) */
+const WEBSITE_ORDER = ["recall", "aegisfabric", "qshield-x", "kubeml", "agentflow", "distdata", "eshaanos", "edge-ai-model-compression", "gideon-ai-desktop-assistant", "morphunet", "fitmind-ai", "shopsmart-ai", "jobber", "webrtc-video-rooms", "algorithmic-trading-bot", "stockpredictor", "book-store", "cabieeee"];
+export const websiteProjects = WEBSITE_ORDER.map((slug) => projects.find((p) => p.slug === slug && p.onWebsite)!).filter(Boolean);

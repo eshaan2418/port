@@ -63,7 +63,8 @@ export function AudioController() {
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
       const p = runtime.player;
-      if (p.speed > 0.4) {
+      cityAudio.setThrust(p.thrust); // the suit's thrusters
+      if (p.speed > 0.4 && !p.flying) {
         phase += p.speed * dt * 0.62;
         if (phase >= 1) {
           phase -= 1;

@@ -23,6 +23,7 @@ export function LogoMark({
   const slot = size + 8;
   return (
     <span
+      data-logo
       className={`inline-flex shrink-0 items-center justify-center rounded-[7px] bg-cream ring-1 ring-ink/10 ${className}`}
       style={{ width: slot, height: slot }}
     >

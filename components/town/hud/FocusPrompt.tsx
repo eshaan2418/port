@@ -7,7 +7,7 @@ import { runtime, useTown } from "../state";
  * Shown when the camera has lost Eshaan (panned away, or he's off-screen /
  * hidden for over a second): a pill near the bottom, plus an arrow on the
  * screen edge pointing toward him when he's out of frame. Click / tap the
- * pill (or him, or press F / Space) to bring the camera back. Never shown in
+ * pill (or him, or press F) to bring the camera back. Never shown in
  * first person or inside an interior (CameraRig clears the flag there).
  */
 export function FocusPrompt({ touch }: { touch: boolean }) {

@@ -34,7 +34,7 @@ export function agentData() {
       ...(e.line ? { line: e.line } : {}),
       ...(e.link ? { link: { label: e.link.label.replace(/\s*→\s*$/, ""), url: e.link.href } } : {}),
     })),
-    projects: projects.map((p) => ({ name: p.name, description: p.description, tags: p.tags, github: p.repoUrl })),
+    projects: projects.map((p) => ({ name: p.name, description: p.description, github: p.repoUrl })),
     extracurriculars: extracurriculars.map((x) => ({ name: x.label, facts: x.facts, ...(x.link ? { link: x.link } : {}) })),
     education: {
       school: education.school,
@@ -58,7 +58,7 @@ export function agentMarkdown() {
   }
   out.push("## Projects", "");
   for (const p of d.projects) {
-    out.push(`### ${p.name}`, "", p.description, "", `- Tags: ${p.tags.join(", ") || "none listed"}`, `- GitHub: ${p.github}`, "");
+    out.push(`### ${p.name}`, "", p.description, "", `- GitHub: ${p.github}`, "");
   }
   out.push("## Extracurriculars", "");
   for (const x of d.extracurriculars) {

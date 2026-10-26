@@ -26,6 +26,7 @@ import { Interiors } from "./interior/Interiors";
 import { enterBuilding, leaveInterior } from "./interior/transitions";
 import { IntroDirector } from "./intro/IntroDirector";
 import { abortIntro, beginIntro, cameraDefaults, intro as introState, skipIntro } from "./intro/intro";
+import { COLLIDERS, FLY_CEILING } from "./world/layout";
 
 /** Phones / tablets get the light build: no shadows, dpr ≤ 1.5, fewer props. */
 function useLowDetail() {
@@ -49,7 +50,7 @@ export default function Town() {
     Object.assign(runtime.camera, cameraDefaults(lowDetail));
     // dev-only handle for the screenshot harness (scripts/screenshot.mjs)
     if (process.env.NODE_ENV !== "production") {
-      (window as unknown as { __town: unknown }).__town = { runtime, useTown, setPov, cityAudio, leaveInterior, enterBuilding, skipIntro, intro: introState };
+      (window as unknown as { __town: unknown }).__town = { runtime, useTown, setPov, cityAudio, leaveInterior, enterBuilding, skipIntro, intro: introState, colliders: COLLIDERS, ceiling: FLY_CEILING };
     }
   }, [setLoading, lowDetail]);
 
@@ -95,10 +96,11 @@ export default function Town() {
       if (e.code === "KeyE" && !e.repeat) runtime.input.enter = true;
       if (e.code === "KeyV" && !e.repeat && !useTown.getState().interior) togglePov();
       if (e.code === "Escape" && useTown.getState().pov) setPov(false);
-      if ((e.code === "KeyF" || e.code === "Space") && !e.repeat && !useTown.getState().startOpen) {
-        if (e.code === "Space" && t.tagName === "BUTTON") return; // let Space press focused buttons
+      if (e.code === "KeyF" && !e.repeat && !useTown.getState().startOpen) runtime.camera.recenter = true; // get the camera back to Eshaan
+      // Space = fly up (held; see Player). Let Space still press a focused button.
+      if (e.code === "Space") {
+        if (t.tagName === "BUTTON" || useTown.getState().startOpen) return;
         e.preventDefault();
-        runtime.camera.recenter = true; // get the camera back to Eshaan
       }
       if (e.code.startsWith("Arrow")) e.preventDefault();
       keys.add(e.code);

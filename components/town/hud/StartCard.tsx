@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { cityAudio } from "../audio/engine";
 import { useTown } from "../state";
+import { startTutorial } from "./Tutorial";
 
 const Key = ({ children, wide = false }: { children: React.ReactNode; wide?: boolean }) => (
   <kbd
@@ -34,7 +35,9 @@ const DESKTOP: { keys: React.ReactNode; label: string }[] = [
     ),
     label: "walk (or the arrow keys)",
   },
-  { keys: <Key wide>shift</Key>, label: "run" },
+  { keys: <Key wide>shift</Key>, label: "run (or boost, flying)" },
+  { keys: <Key wide>space</Key>, label: "fly up (hold), hover when released" },
+  { keys: <Key>C</Key>, label: "fly down / land" },
   { keys: <Gesture>click ground</Gesture>, label: "walk there" },
   { keys: <Key>E</Key>, label: "enter a door" },
   { keys: <Gesture>drag</Gesture>, label: "orbit the camera" },
@@ -55,7 +58,8 @@ const DESKTOP: { keys: React.ReactNode; label: string }[] = [
 ];
 
 const TOUCH: { keys: React.ReactNode; label: string }[] = [
-  { keys: <Gesture>joystick</Gesture>, label: "walk" },
+  { keys: <Gesture>joystick</Gesture>, label: "walk (or fly around)" },
+  { keys: <Gesture>▲ ▼ buttons</Gesture>, label: "fly up / come down" },
   { keys: <Gesture>tap ground</Gesture>, label: "walk there" },
   { keys: <Gesture>tap a door</Gesture>, label: "enter" },
   { keys: <Gesture>1 finger drag</Gesture>, label: "look around" },
@@ -71,6 +75,7 @@ export function StartCard({ touch }: { touch: boolean }) {
   const open = useTown((s) => s.startOpen);
   const close = useTown((s) => s.closeStart);
   const button = useRef<HTMLButtonElement>(null);
+  const replay = useRef<HTMLButtonElement>(null);
   const start = () => {
     close();
     void cityAudio.start(); // (a gesture: harmless if audio is already running)
@@ -88,8 +93,8 @@ export function StartCard({ touch }: { touch: boolean }) {
         start();
       }
       if (e.key === "Tab") {
-        e.preventDefault(); // one control: keep focus on it
-        button.current?.focus();
+        e.preventDefault(); // two controls: Tab swaps between them
+        (document.activeElement === button.current ? replay : button).current?.focus();
       }
     };
     window.addEventListener("keydown", onKey, true);
@@ -123,9 +128,20 @@ export function StartCard({ touch }: { touch: boolean }) {
           ))}
         </ul>
         <div className="mt-8 flex items-center justify-between gap-4">
-          <p className="text-xs text-muted">
-            {touch ? "reopen this anytime with ?" : "press ? to see this again"}
-          </p>
+          <div>
+            <p className="text-xs text-muted">{touch ? "reopen this anytime with ?" : "press ? to see this again"}</p>
+            <button
+              ref={replay}
+              type="button"
+              onClick={() => {
+                start();
+                startTutorial();
+              }}
+              className="mt-1 text-[0.85rem] font-medium text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink"
+            >
+              replay the tutorial
+            </button>
+          </div>
           <button
             ref={button}
             type="button"

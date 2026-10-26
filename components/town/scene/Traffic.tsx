@@ -185,7 +185,8 @@ export function Traffic({ lowDetail }: { lowDetail: boolean }) {
     const dt = Math.min(rawDt, 0.05);
     const t = clock.elapsedTime;
     const p = runtime.player;
-    const pr = Math.hypot(p.x, p.z);
+    // flying overhead, he's not in the road: cars don't stop for him
+    const pr = p.y > 1.2 ? 99 : Math.hypot(p.x, p.z);
     const pa = Math.atan2(p.z, p.x);
     const red = signalRed(t);
     const list = cars.current;
@@ -327,7 +328,7 @@ export function Traffic({ lowDetail }: { lowDetail: boolean }) {
         beams.current.setMatrixAt(beamK++, o.matrix);
       }
 
-      dynamicColliders.push({ kind: "box", x, z, hw: spec.width / 2 + 0.04, hd: spec.len / 2 + 0.04, rot: yaw });
+      dynamicColliders.push({ kind: "box", x, z, hw: spec.width / 2 + 0.04, hd: spec.len / 2 + 0.04, rot: yaw, h: 1.5 });
       runtime.traffic.push({ kind: car.kind, x, z, v: car.v });
     }
     for (const k of Object.keys(store.meshes) as Kind[]) for (const mesh of store.meshes[k]) if (mesh) mesh.instanceMatrix.needsUpdate = true;

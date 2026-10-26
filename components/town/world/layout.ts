@@ -246,48 +246,120 @@ export const TREES = makeTrees();
 
 /* ── colliders (XZ plane) ────────────────────────────────────────────── */
 
-export type Collider =
-  | { kind: "circle"; x: number; z: number; r: number }
-  | { kind: "box"; x: number; z: number; hw: number; hd: number; rot: number };
+/**
+ * `h`: the obstacle's top (he flies over it above that height);
+ * `base`: its underside, for overhangs (awnings, the portico, fire escapes,
+ * tree crowns): he passes underneath when his head is lower;
+ * `roof`: a flat top he can land on (at `h`);
+ * `air`: only stops him in flight (tree crowns: walkers duck under them).
+ */
+export type Collider = ({ kind: "circle"; x: number; z: number; r: number } | { kind: "box"; x: number; z: number; hw: number; hd: number; rot: number }) & {
+  h?: number;
+  base?: number;
+  roof?: boolean;
+  air?: boolean;
+};
+
+/** where each building's roof really is (the cornice slab sits on top of the walls) */
+export const roofTop = (b: Building) => buildingHeight(b) + (b.kind === "house" ? 0.41 : 0.36);
+/** the art deco tower's stepped crown (Experience): tier widths / heights, from the roof up */
+export const CROWN = { tiers: [1.5, 1.3, 1.1], firstInset: 1.0, step: 1.1, spire: 3.2 };
+/** the round tower's copper roof (Extracurriculars): a truncated cone with a small flat deck */
+export const COPPER = { h: 2.4, overhang: 0.5, deck: 1.3, mast: 1.0 };
+
+/** awning over a door (matches Buildings.tsx `entrance`): local z of the wall, width, door base / height */
+function awningCollider(b: Building, z: number, aw: number, base: number, dh: number): Collider {
+  const p = placement(b);
+  const c = toWorld(b, 0, z + 0.58);
+  const ay = base + dh + 0.42;
+  return { kind: "box", x: c.x, z: c.z, hw: aw / 2 + 0.05, hd: 0.62, rot: p.rotY, base: ay - 0.45, h: ay + 0.3 };
+}
 
 function buildColliders(): Collider[] {
   const out: Collider[] = [];
   for (const b of BUILDINGS) {
     const p = placement(b);
+    const H = buildingHeight(b);
+    const top = roofTop(b);
+    const hd = b.d / 2;
     if (b.kind === "round") {
-      out.push({ kind: "circle", x: p.x, z: p.z, r: b.w / 2 + 0.05 });
-      const v = toWorld(b, 0, b.w / 2 + 0.05); // vestibule
-      out.push({ kind: "box", x: v.x, z: v.z, hw: 1.55, hd: 0.3, rot: p.rotY });
+      // walls, then the copper roof as stacked rings (he slides off the slope), a flat deck on top and the finial mast
+      const r = b.w / 2;
+      const R = r + COPPER.overhang;
+      out.push({ kind: "circle", x: p.x, z: p.z, r: r + 0.05, h: H });
+      out.push({ kind: "circle", x: p.x, z: p.z, r: R, base: H - 0.3, h: H + 0.05 }); // the eave
+      for (let rr = R - 0.5; rr > COPPER.deck + 0.2; rr -= 0.5)
+        out.push({ kind: "circle", x: p.x, z: p.z, r: rr, h: H + (COPPER.h * (R - rr)) / (R - COPPER.deck) });
+      out.push({ kind: "circle", x: p.x, z: p.z, r: COPPER.deck, h: H + COPPER.h, roof: true });
+      out.push({ kind: "circle", x: p.x, z: p.z, r: 0.1, h: H + COPPER.h + COPPER.mast + 0.3 });
+      const v = toWorld(b, 0, r + 0.05); // vestibule
+      out.push({ kind: "box", x: v.x, z: v.z, hw: 1.55, hd: 0.3, rot: p.rotY, h: 4 });
+      out.push(awningCollider(b, r + 0.3, 3.2, 0, 2.4));
     } else {
-      out.push({ kind: "box", x: p.x, z: p.z, hw: b.w / 2 + 0.05, hd: b.d / 2 + 0.05, rot: p.rotY });
+      out.push({ kind: "box", x: p.x, z: p.z, hw: b.w / 2 + 0.05, hd: hd + 0.05, rot: p.rotY, h: top, roof: true });
     }
     if (b.kind === "house") {
       // stoop: steps + side walls in front of the raised door
-      const s = toWorld(b, 0, b.d / 2 + 0.7);
-      out.push({ kind: "box", x: s.x, z: s.z, hw: 1.15, hd: 0.72, rot: p.rotY });
+      const s = toWorld(b, 0, hd + 0.7);
+      out.push({ kind: "box", x: s.x, z: s.z, hw: 1.15, hd: 0.72, rot: p.rotY, h: 1.3 });
+      out.push(awningCollider(b, hd, 2.4, 1.15, 2.2));
+      const wt = toWorld(b, -1.6, -0.9); // the water tower on the roof
+      out.push({ kind: "circle", x: wt.x, z: wt.z, r: 1.0, h: H + 4.45 });
+    }
+    if (b.kind === "tower") {
+      // the stepped crown: each tier is a roof of its own; the spire on top
+      let w = b.w - CROWN.firstInset;
+      let y = top;
+      for (const th of CROWN.tiers) {
+        y += th;
+        out.push({ kind: "box", x: p.x, z: p.z, hw: w / 2, hd: w / 2, rot: p.rotY, h: y, roof: true });
+        w -= CROWN.step;
+      }
+      out.push({ kind: "circle", x: p.x, z: p.z, r: 0.36, h: y + CROWN.spire });
+      out.push(awningCollider(b, hd, 3.4, 0, 2.5));
+    }
+    if (b.kind === "gallery") {
+      out.push(awningCollider(b, hd, 3.8, 0, 2.5));
+      for (const side of [-1, 1]) {
+        // fire escapes: from the first platform up to the top rail
+        const f = toWorld(b, side * (b.w / 2 + 0.45), 0);
+        out.push({ kind: "box", x: f.x, z: f.z, hw: 0.47, hd: Math.min(3.2, b.d - 1.4) / 2 + 0.05, rot: p.rotY, base: b.groundH, h: b.groundH + (b.floors - 2) * b.floorH + 0.6 });
+      }
     }
     if (b.kind === "education") {
       for (const cx of [-2.85, -0.95, 0.95, 2.85]) {
-        const c = toWorld(b, cx, b.d / 2 + 1.1);
-        out.push({ kind: "circle", x: c.x, z: c.z, r: 0.34 });
+        const c = toWorld(b, cx, hd + 1.1);
+        out.push({ kind: "circle", x: c.x, z: c.z, r: 0.34, h: 6.8 });
       }
+      const pt = toWorld(b, 0, hd + 1.0); // entablature + pediment over the columns
+      out.push({ kind: "box", x: pt.x, z: pt.z, hw: 4.45, hd: 1.3, rot: p.rotY, base: 4.55, h: 6.9 });
+      out.push(awningCollider(b, hd, 2.8, 0, 2.5));
       const mb = toWorld(b, MAILBOX_LOCAL.x, MAILBOX_LOCAL.z); // the post-office mailbox
-      out.push({ kind: "circle", x: mb.x, z: mb.z, r: 0.36 });
+      out.push({ kind: "circle", x: mb.x, z: mb.z, r: 0.36, h: 1.2 });
     }
   }
-  out.push({ kind: "circle", x: 0, z: 0, r: FOUNTAIN_RADIUS + 0.05 });
-  out.push({ kind: "circle", x: pond.x, z: pond.z, r: POND.r + 0.25 });
-  for (const t of TREES) out.push({ kind: "circle", x: t.x, z: t.z, r: 0.36 * t.s + 0.12 });
-  for (const l of STREET_LAMPS) out.push({ kind: "circle", x: l.x, z: l.z, r: 0.18 });
-  for (const l of TRAFFIC_LIGHTS) out.push({ kind: "circle", x: l.x, z: l.z, r: 0.16 });
-  for (const h of HYDRANTS) out.push({ kind: "circle", x: h.x, z: h.z, r: 0.2 });
-  for (const n of NEWS_BOXES) out.push({ kind: "box", x: n.x, z: n.z, hw: 0.26, hd: 0.22, rot: n.rotY });
-  for (const s of STREET_SIGNS) out.push({ kind: "circle", x: s.x, z: s.z, r: 0.12 });
-  for (const s of SIGN_POSTS) if (s.mount === "post") out.push({ kind: "circle", x: s.x, z: s.z, r: 0.14 });
-  for (const b of BENCHES) out.push({ kind: "box", x: b.x, z: b.z, hw: 0.95, hd: 0.36, rot: b.rotY });
-  out.push({ kind: "box", x: CART.x, z: CART.z, hw: 0.95, hd: 0.55, rot: CART.rotY });
-  out.push({ kind: "box", x: SUBWAY.x, z: SUBWAY.z, hw: 1.25, hd: 1.75, rot: SUBWAY.rotY });
+  out.push({ kind: "circle", x: 0, z: 0, r: FOUNTAIN_RADIUS + 0.05, h: 1.6 });
+  out.push({ kind: "circle", x: pond.x, z: pond.z, r: POND.r + 0.25, h: 0.3 });
+  for (const t of TREES) {
+    out.push({ kind: "circle", x: t.x, z: t.z, r: 0.36 * t.s + 0.12, h: 3.8 * t.s });
+    out.push({ kind: "circle", x: t.x, z: t.z, r: 1.2 * t.s, base: 1.0 * t.s, h: 3.8 * t.s, air: true }); // the crown
+  }
+  for (const l of STREET_LAMPS) out.push({ kind: "circle", x: l.x, z: l.z, r: 0.18, h: 4.6 });
+  for (const l of TRAFFIC_LIGHTS) out.push({ kind: "circle", x: l.x, z: l.z, r: 0.16, h: 4.2 });
+  for (const h of HYDRANTS) out.push({ kind: "circle", x: h.x, z: h.z, r: 0.2, h: 0.9 });
+  for (const n of NEWS_BOXES) out.push({ kind: "box", x: n.x, z: n.z, hw: 0.26, hd: 0.22, rot: n.rotY, h: 1.2 });
+  for (const s of STREET_SIGNS) out.push({ kind: "circle", x: s.x, z: s.z, r: 0.12, h: 3.2 });
+  for (const s of SIGN_POSTS) if (s.mount === "post") out.push({ kind: "circle", x: s.x, z: s.z, r: 0.14, h: 4.5 });
+  for (const b of BENCHES) out.push({ kind: "box", x: b.x, z: b.z, hw: 0.95, hd: 0.36, rot: b.rotY, h: 1 });
+  out.push({ kind: "box", x: CART.x, z: CART.z, hw: 0.95, hd: 0.55, rot: CART.rotY, h: 2.6 });
+  out.push({ kind: "box", x: SUBWAY.x, z: SUBWAY.z, hw: 1.25, hd: 1.75, rot: SUBWAY.rotY, h: 2.8 });
   return out;
 }
 
 export const COLLIDERS = buildColliders();
+
+/** the highest roof he can stand on (the top of Experience's crown) */
+export const HIGHEST_ROOF = Math.max(...COLLIDERS.filter((c) => c.roof).map((c) => c.h ?? 0));
+/** the suit's ceiling: just over the highest roof (so he can land on it), never above the tallest building */
+export const FLY_CEILING = HIGHEST_ROOF + 2.5;
+

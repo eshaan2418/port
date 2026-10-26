@@ -9,14 +9,14 @@ import { useTown } from "../../state";
 import { PROJECTS_FLOORS } from "../floors";
 import { Tower, type FloorDef, type RoomProps } from "../Tower";
 import { Box, Cyl, Plant, mat } from "../kit";
-import { BOARD_FONTS, STREET_FONT } from "../../scene/Buildings";
+import { BOARD_FONTS } from "../../scene/Buildings";
 
 /**
  * Projects Gallery: one hall with every project, hung salon-style in three
  * rows on the back wall, in the fixed order from data/projects.ts (read left
  * to right, top to bottom; every frame the same size). Each frame is a
- * typographic panel: the name in the gallery's board font, the tech tags,
- * and an orange or Tiffany border. (If a real /public/projects/<slug>.webp
+ * typographic panel: the name in the gallery's board font with an orange
+ * or Tiffany border (no language / tech labels). (If a real /public/projects/<slug>.webp
  * is ever added it's shown instead; otherwise there's no image at all.)
  * Click a frame, or pick it on the plaque: he walks over, the camera moves
  * in, and the plaque shows the details and the GitHub link.
@@ -87,7 +87,6 @@ function Frame({ s, active }: { s: Slot; active: boolean }) {
     if (g) g.opacity += ((picked ? 0.85 : hover ? 0.5 : 0) - g.opacity) * (1 - Math.exp(-dt * 10));
   });
   const accent = ACCENT[s.p.accent];
-  const tags = s.p.tags.join(" · ").toUpperCase();
   return (
     <group position={[s.x, s.y, BACK + 0.06]}>
       {/* halo when hovered / picked */}
@@ -128,15 +127,12 @@ function Frame({ s, active }: { s: Slot; active: boolean }) {
             color="#F6EFE3"
             anchorX="left"
             anchorY="middle"
-            position={[-s.w / 2 + 0.1, 0.08, 0.04]}
+            position={[-s.w / 2 + 0.1, 0, 0.04]}
             maxWidth={s.w - 0.2}
             letterSpacing={0.03}
             lineHeight={1}
           >
             {s.p.name.toUpperCase()}
-          </Text>
-          <Text font={STREET_FONT} fontSize={0.075} color={accent} anchorX="left" anchorY="middle" position={[-s.w / 2 + 0.1, -s.h / 2 + 0.13, 0.04]} maxWidth={s.w - 0.2}>
-            {tags}
           </Text>
         </>
       )}

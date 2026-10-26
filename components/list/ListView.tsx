@@ -1,21 +1,25 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Award, Cloud, Code, Medal, Sigma, Snowflake, Sparkles, Trophy, Zap } from "lucide-react";
 import { experiences, experienceAnchorId } from "@/data/experiences";
 import { websiteProjects } from "@/data/projects";
 import { education } from "@/data/education";
 import { extracurricularHighlights } from "@/data/extracurriculars";
 import { site, mailto } from "@/data/site";
 import { LogoMark } from "@/components/LogoMark";
+import { LinkedInIcon } from "@/components/icons";
 import { listBody, listDisplay } from "@/app/fonts/list";
 import { FallbackNotice, FreeRoamButton, SwitchModeButton } from "./ModeControls";
 
 /**
- * The normal website: one dark screen, no scrolling on desktop (a 100dvh
+ * The normal website: one screen, no scrolling on desktop (a 100dvh
  * grid: a slim top bar, then experience / projects / education +
  * extracurriculars + contact). Below 1100px wide or 700px tall it stacks
  * into one scrolling column. Server-rendered, with all the text in the HTML
  * (it's also in the DOM, visually hidden, in the other modes). Styles:
  * `.list-view` in globals.css.
  */
+/** an icon per extracurricular fact, in the order of extracurricularHighlights (decoration only) */
+const EXTRA_ICONS = [Trophy, Award, Zap, Snowflake, Medal, Code, Sigma, Cloud];
+
 export function ListView() {
   return (
     <div className={`list-view ${listDisplay.variable} ${listBody.variable}`}>
@@ -74,18 +78,20 @@ export function ListView() {
               experience
             </h2>
             <ol className="lv-exp-list">
-              {experiences.map((e) => (
+              {experiences.filter((e) => !e.hideOnWebsite).map((e) => (
                 <li key={e.id} id={experienceAnchorId(e.id)} className="lv-exp-row">
-                  <LogoMark src={e.logo} alt={`${e.org} logo`} size={20} />
+                  <LogoMark src={e.logo} alt={`${e.org} logo`} size={28} />
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <h3 className="lv-exp-title" title={`${e.role}, ${e.company}`}>
-                        {e.role} <span className="lv-company">{e.company}</span>
-                      </h3>
+                    <div className="lv-exp-head">
+                      <h3 className="lv-exp-role">{e.role}</h3>
                       <p className="lv-dates">{e.dates}</p>
                     </div>
+                    <p className="lv-exp-company">
+                      {e.org}
+                      {e.company.endsWith(" · Internship") && <span className="lv-chip">Internship</span>}
+                    </p>
                     {(e.line || e.link) && (
-                      <p className="lv-exp-line" title={e.line} tabIndex={e.line ? 0 : undefined}>
+                      <p className="lv-exp-line">
                         {e.line}
                         {e.link && (
                           <>
@@ -108,13 +114,17 @@ export function ListView() {
             <h2 id="h-extra" className="lv-label">
               extracurriculars
             </h2>
-            <div className="lv-card lv-pad">
-              <ul className="flex flex-wrap gap-1.5">
-                {extracurricularHighlights.map((x) => (
-                  <li key={x} className="lv-tag lv-tag-text">
-                    {x}
-                  </li>
-                ))}
+            <div className="lv-card lv-pad lv-extra">
+              <ul className="lv-extra-list">
+                {extracurricularHighlights.map((x, i) => {
+                  const Icon = EXTRA_ICONS[i] ?? Sparkles;
+                  return (
+                    <li key={x} className="lv-extra-row">
+                      <Icon size={17} strokeWidth={1.8} aria-hidden="true" className="lv-extra-icon" />
+                      {x}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </section>
@@ -128,12 +138,9 @@ export function ListView() {
               {websiteProjects.map((p) => (
                 <li key={p.slug}>
                   <a href={p.repoUrl} target="_blank" rel="noopener noreferrer" className="lv-card lv-project">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="lv-proj-name">{p.name}</h3>
-                      <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" className="lv-arrow shrink-0" />
-                    </div>
-                    <p className="lv-proj-desc">{p.description}</p>
-                    {p.tags[0] && <span className="lv-tag">{p.tags[0]}</span>}
+                    <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" className="lv-arrow" />
+                    <h3 className="lv-proj-name">{p.name}</h3>
+                    <p className="lv-proj-desc">{p.shortDescription ?? p.description}</p>
                     <span className="sr-only"> (view {p.name} on GitHub, opens in a new tab)</span>
                   </a>
                 </li>
@@ -145,11 +152,16 @@ export function ListView() {
             <h2 id="h-contact" className="lv-label">
               contact
             </h2>
-            <div className="lv-card lv-pad lv-contact">
+            <div className="lv-card lv-contact">
               <p className="lv-contact-title">let&apos;s work together.</p>
-              <a href={mailto} className="lv-btn self-start">
-                Send me a note <span aria-hidden="true">→</span>
-              </a>
+              <div className="lv-contact-row">
+                <a href={mailto} className="lv-btn">
+                  Send me a note <span aria-hidden="true">→</span>
+                </a>
+                <a href={site.linkedin} target="_blank" rel="noopener noreferrer" className="lv-btn-ghost">
+                  <LinkedInIcon size={14} /> LinkedIn<span className="sr-only"> (opens in a new tab)</span>
+                </a>
+              </div>
               <p className="lv-foot">© 2026 {site.name}</p>
             </div>
           </section>

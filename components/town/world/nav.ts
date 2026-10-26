@@ -1,5 +1,5 @@
 import { BUILDINGS, SIDEWALK_RING, SQUARE_RADIUS, placement, type BuildingId } from "./layout";
-import { clearanceAt } from "./physics";
+import { clearanceAt, topAt } from "./physics";
 
 type V2 = { x: number; z: number };
 
@@ -161,3 +161,25 @@ export const laneRadiusAt = (deg: number) => {
   const p = lanePoint(deg);
   return Math.hypot(p.x, p.z);
 };
+
+/**
+ * Where he sets down when he flies to a building: on the open sidewalk just
+ * in front of its door spot (clear of awnings, the portico, crowns and curb
+ * furniture), so he lands, then takes the last few steps to the door.
+ */
+const landing = new Map<BuildingId, V2>();
+export function landingSpot(id: BuildingId): V2 {
+  const hit = landing.get(id);
+  if (hit) return hit;
+  const pl = placement(BUILDINGS.find((x) => x.id === id)!);
+  let best: V2 = { x: pl.approach.x + pl.front.x * 1.2, z: pl.approach.z + pl.front.z * 1.2 };
+  for (const k of [1.0, 1.2, 1.4, 0.8, 1.6, 1.8, 2.0, 0.6]) {
+    const q = { x: pl.approach.x + pl.front.x * k, z: pl.approach.z + pl.front.z * k };
+    if (topAt(q.x, q.z, 0.55, false) === 0) {
+      best = q;
+      break;
+    }
+  }
+  landing.set(id, best);
+  return best;
+}

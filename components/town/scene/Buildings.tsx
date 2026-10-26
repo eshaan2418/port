@@ -4,7 +4,7 @@ import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { RoundedBox, Text } from "@react-three/drei";
 import * as THREE from "three";
-import { BUILDINGS, MAILBOX_LOCAL, buildingHeight, placement, type Building, type BuildingId } from "../world/layout";
+import { BUILDINGS, COPPER, CROWN, MAILBOX_LOCAL, buildingHeight, placement, roofTop, type Building, type BuildingId } from "../world/layout";
 import { registry } from "../world/registry";
 import { useTown } from "../state";
 import { getMats, type Mats } from "./materials";
@@ -183,18 +183,18 @@ function collectParts() {
         for (const x of [-2.95, -0.95, 0.95, 2.95])
           for (const f of [1, -1]) boxes.push({ mat: "creamShade", m: local(M, [x, (b.groundH + H) / 2, f * (hd + 0.06)], [0.3, H - b.groundH, 0.14]) });
         for (const x of [-2.2, 2.2]) windowOn(boxes, M, "front", b, x, 1.9, 0.9, 1.6);
-        let w = b.w - 1.0;
-        let y = H + 0.36;
-        for (const h of [1.5, 1.3, 1.1]) {
+        let w = b.w - CROWN.firstInset;
+        let y = roofTop(b);
+        for (const h of CROWN.tiers) {
           boxes.push({ mat: "limestone", m: local(M, [0, y + h / 2, 0], [w, h, w]) });
           boxes.push({ mat: "tiffany", m: local(M, [0, y + h - 0.05, 0], [w + 0.16, 0.1, w + 0.16]) });
           for (const f of [1, -1]) boxes.push({ mat: "awningLight", m: local(M, [0, y + h * 0.5, f * (w / 2 + 0.01)], [w * 0.7, 0.08, 0.02]) }); // crown lights
           for (const sx of [-1, 1])
             boxes.push({ mat: "orange", m: local(M, [sx * (w / 2 - 0.15), y + h / 2, w / 2 + 0.02], [0.12, h * 0.9, 0.04]) }); // deco fins
           y += h;
-          w -= 1.1;
+          w -= CROWN.step;
         }
-        boxes.push({ mat: "limestone", m: local(M, [0, y + 1.6, 0], [0.5, 3.2, 0.5], [0, Math.PI / 4, 0]) });
+        boxes.push({ mat: "limestone", m: local(M, [0, y + CROWN.spire / 2, 0], [0.5, CROWN.spire, 0.5], [0, Math.PI / 4, 0]) });
       }
       if (b.kind === "gallery") {
         for (const x of [-3.3, 3.3]) windowOn(boxes, M, "front", b, x, 1.9, 1.9, 2.2);
@@ -394,12 +394,26 @@ function Shell({ b }: { b: Building }) {
   const m = getMats();
   const p = placement(b);
   const H = buildingHeight(b);
+  const top = roofTop(b);
   const blocker = useRef<THREE.Mesh>(null);
   const portico = useRef<THREE.Mesh>(null);
   const stoop = useRef<THREE.Mesh>(null);
+  const crownRefs = useRef<(THREE.Mesh | null)[]>([]);
+  // Experience's stepped crown, tier by tier (centre height, width, height)
+  const crown = useMemo(() => {
+    const out: { y: number; w: number; h: number }[] = [];
+    let w = b.w - CROWN.firstInset;
+    let y = top;
+    for (const h of CROWN.tiers) {
+      out.push({ y: y + h / 2, w, h });
+      y += h;
+      w -= CROWN.step;
+    }
+    return out;
+  }, [b, top]);
 
   useLayoutEffect(() => {
-    const meshes = [blocker.current, portico.current, stoop.current].filter((x): x is THREE.Mesh => !!x);
+    const meshes = [blocker.current, portico.current, stoop.current, ...crownRefs.current].filter((x): x is THREE.Mesh => !!x);
     for (const mesh of meshes) mesh.userData.buildingId = b.id;
     registry.blockers.push(...meshes);
     return () => {
@@ -422,15 +436,22 @@ function Shell({ b }: { b: Building }) {
 
       {b.kind === "round" && (
         <>
-          {/* verdigris copper cone, the way old NYC copper roofs weather */}
-          <mesh position={[0, H + 1.7, 0]} material={m.tiffanyDeep} castShadow>
-            <coneGeometry args={[b.w / 2 + 0.5, 3.4, 28]} />
+          {/* verdigris copper roof, the way old NYC copper roofs weather: a cone cut flat at the top (a deck he can land on) */}
+          <mesh position={[0, H + COPPER.h / 2, 0]} material={m.tiffanyDeep} castShadow receiveShadow>
+            <cylinderGeometry args={[COPPER.deck, b.w / 2 + COPPER.overhang, COPPER.h, 28]} />
           </mesh>
-          <mesh position={[0, H + 3.55, 0]} material={m.tiffany}>
-            <icosahedronGeometry args={[0.24, 1]} />
+          <mesh position={[0, H + COPPER.h + 0.03, 0]} material={m.tiffany} receiveShadow>
+            <cylinderGeometry args={[COPPER.deck + 0.04, COPPER.deck + 0.04, 0.06, 28]} />
           </mesh>
-          <mesh position={[0.45, H + 3.95, 0]} rotation-z={-Math.PI / 2} material={m.orange}>
-            <coneGeometry args={[0.18, 0.8, 3]} />
+          {/* the finial on a short mast, with its weathervane */}
+          <mesh position={[0, H + COPPER.h + COPPER.mast / 2, 0]} material={m.iron}>
+            <cylinderGeometry args={[0.05, 0.07, COPPER.mast, 8]} />
+          </mesh>
+          <mesh position={[0, H + COPPER.h + COPPER.mast + 0.1, 0]} material={m.tiffany}>
+            <icosahedronGeometry args={[0.2, 1]} />
+          </mesh>
+          <mesh position={[0.4, H + COPPER.h + COPPER.mast + 0.42, 0]} rotation-z={-Math.PI / 2} material={m.orange}>
+            <coneGeometry args={[0.16, 0.7, 3]} />
           </mesh>
         </>
       )}
@@ -486,9 +507,16 @@ function Shell({ b }: { b: Building }) {
 
 
       {/* invisible volumes for camera occlusion + click-to-enter */}
-      <mesh ref={blocker} position={[0, (H + 3) / 2, 0]} visible={false}>
-        {b.kind === "round" ? <cylinderGeometry args={[b.w / 2 + 0.35, b.w / 2 + 0.35, H + 3, 12]} /> : <boxGeometry args={[b.w, H + 3, b.d]} />}
+      {/* (as tall as the roof really is, so he's never "hidden" standing on it) */}
+      <mesh ref={blocker} position={[0, top / 2, 0]} visible={false}>
+        {b.kind === "round" ? <cylinderGeometry args={[b.w / 2 + 0.35, b.w / 2 + 0.35, top, 12]} /> : <boxGeometry args={[b.w, top, b.d]} />}
       </mesh>
+      {b.kind === "tower" &&
+        crown.map((t, i) => (
+          <mesh key={i} ref={(el) => void (crownRefs.current[i] = el)} position={[0, t.y, 0]} visible={false}>
+            <boxGeometry args={[t.w, t.h, t.w]} />
+          </mesh>
+        ))}
       {b.kind === "house" && (
         <mesh ref={stoop} position={[0, 0.9, b.d / 2 + 0.72]} visible={false}>
           <boxGeometry args={[2.4, 1.8, 1.45]} />

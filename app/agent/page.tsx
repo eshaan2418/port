@@ -91,7 +91,6 @@ export default function AgentPage() {
                 <article aria-label={p.name} className="border-l-2 border-tiffany/50 pl-4">
                   <h3 className="font-semibold">{p.name}</h3>
                   <p className="mt-1">{p.description}</p>
-                  <p className="mt-1">tags: {p.tags.length ? p.tags.join(", ") : "none listed"}</p>
                   <p>
                     github: <a className={a} href={p.github}>{p.github}</a>
                   </p>

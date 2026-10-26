@@ -34,7 +34,7 @@ const angleLerp = (a: number, b: number, t: number) => a + Math.atan2(Math.sin(b
  * panned away, the HUD offers "click on eshaan to get back focus".
  */
 export function CameraRig() {
-  const { camera } = useThree();
+  const { camera, size } = useThree();
   const v = useMemo(
     () => ({
       target: new THREE.Vector3(),
@@ -132,9 +132,9 @@ export function CameraRig() {
     // ── first person (forward = −sin yaw, −cos yaw)
     const fx = -Math.sin(c.yaw);
     const fz = -Math.cos(c.yaw);
-    v.eye.set(p.x + fx * 0.22, EYE_HEIGHT, p.z + fz * 0.22);
+    v.eye.set(p.x + fx * 0.22, EYE_HEIGHT + p.y, p.z + fz * 0.22);
     const cl = Math.cos(c.look);
-    v.povLook.set(v.eye.x + fx * cl, EYE_HEIGHT + Math.sin(c.look), v.eye.z + fz * cl);
+    v.povLook.set(v.eye.x + fx * cl, EYE_HEIGHT + p.y + Math.sin(c.look), v.eye.z + fz * cl);
 
     blend.current += ((pov ? 1 : 0) - blend.current) * (1 - Math.exp(-dt * 7));
     const b = blend.current < 0.002 ? 0 : blend.current > 0.998 ? 1 : blend.current;
@@ -150,7 +150,7 @@ export function CameraRig() {
       f.lost = false;
       lostFor.current = 0;
     } else {
-      v.chest.set(p.x, 1.1, p.z);
+      v.chest.set(p.x, 1.1 + p.y, p.z); // + altitude when flying
       v.ndc.copy(v.chest).project(camera);
       const behind = v.ndc.z > 1;
       const offscreen = behind || Math.abs(v.ndc.x) > 1 || Math.abs(v.ndc.y) > 1;
@@ -170,6 +170,13 @@ export function CameraRig() {
       f.sy = behind ? -v.ndc.y : v.ndc.y;
     }
     useTown.getState().setFocusLost(f.lost);
+
+    // his head on screen, for the flight-hint bubble over him
+    v.ndc.set(p.x, p.y + 2.05, p.z).project(camera);
+    const hd = runtime.head;
+    hd.visible = !pov && !inside && v.ndc.z < 1 && Math.abs(v.ndc.x) < 1.1 && Math.abs(v.ndc.y) < 1.1;
+    hd.x = ((v.ndc.x + 1) / 2) * size.width;
+    hd.y = ((1 - v.ndc.y) / 2) * size.height;
   });
 
   return null;

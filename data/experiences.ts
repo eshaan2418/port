@@ -24,6 +24,8 @@ export type Experience = {
   /** Path under /public. Replace the file to swap a logo; no code change needed. */
   logo: string;
   link?: ExperienceLink;
+  /** leave this one off the normal website only */
+  hideOnWebsite?: boolean;
 };
 
 export const experiences: Experience[] = [
@@ -114,6 +116,7 @@ export const experiences: Experience[] = [
   },
   {
     id: "vex-robotics",
+    hideOnWebsite: true, // not on the normal website (still in the 3D tower and the agent files)
     role: "Bot Programmer",
     company: "VEX Robotics",
     org: "VEX Robotics",
@@ -133,6 +136,7 @@ export const experiences: Experience[] = [
   {
     // not in the latest source: title, company and year only
     id: "aiesec",
+    hideOnWebsite: true, // not on the normal website (still in the 3D tower and the agent files)
     role: "VP of Technology",
     company: "AIESEC",
     org: "AIESEC",

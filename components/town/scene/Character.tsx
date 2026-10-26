@@ -82,7 +82,12 @@ const CLIP_FOR: Record<Exclude<Pose, "auto">, string[]> = {
   cheer: ["celebrate", "idle"],
 };
 
-export function Character({ pose = "auto", isPlayer = false, gear = null }: { pose?: Pose; isPlayer?: boolean; gear?: Gear }) {
+/**
+ * `suit`: the flight suit he wears outdoors (an original armour in the site's
+ * palette: navy plates, orange accents, a Tiffany visor and chest core,
+ * thrusters in the boots and palms). Interiors show him without it.
+ */
+export function Character({ pose = "auto", isPlayer = false, gear = null, suit = false }: { pose?: Pose; isPlayer?: boolean; gear?: Gear; suit?: boolean }) {
   const [hasModel, setHasModel] = useState<boolean | null>(null);
   useEffect(() => {
     let alive = true;
@@ -96,12 +101,12 @@ export function Character({ pose = "auto", isPlayer = false, gear = null }: { po
 
   if (hasModel) {
     return (
-      <Suspense fallback={<Placeholder pose={pose} isPlayer={isPlayer} gear={gear} />}>
+      <Suspense fallback={<Placeholder pose={pose} isPlayer={isPlayer} gear={gear} suit={suit} />}>
         <ModelCharacter pose={pose} isPlayer={isPlayer} />
       </Suspense>
     );
   }
-  return <Placeholder pose={pose} isPlayer={isPlayer} gear={gear} />;
+  return <Placeholder pose={pose} isPlayer={isPlayer} gear={gear} suit={suit} />;
 }
 
 /** what "auto" resolves to this frame */
@@ -354,7 +359,18 @@ function poseJoints(pose: Exclude<Pose, "auto">, t: number): Joints {
   return j;
 }
 
-function Placeholder({ pose, isPlayer, gear = null }: { pose: Pose; isPlayer: boolean; gear?: Gear }) {
+/** the suit's materials (shared) */
+const SUIT = {
+  armor: new THREE.MeshStandardMaterial({ color: "#1c2e5e", roughness: 0.32, metalness: 0.6, flatShading: true }),
+  armorDark: new THREE.MeshStandardMaterial({ color: "#121d3d", roughness: 0.38, metalness: 0.55, flatShading: true }),
+  accent: new THREE.MeshStandardMaterial({ color: "#f37021", roughness: 0.35, metalness: 0.45, flatShading: true }),
+  glow: new THREE.MeshStandardMaterial({ color: "#c9f4ef", emissive: new THREE.Color("#81d8d0"), emissiveIntensity: 2.2, roughness: 0.2 }),
+  flame: new THREE.MeshBasicMaterial({ color: "#ffb35c", transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }),
+  flameCore: new THREE.MeshBasicMaterial({ color: "#bff3ee", transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }),
+};
+const CRUISE = 8; // the suit's cruise speed (see Player FLY_SPEED)
+
+function Placeholder({ pose, isPlayer, gear = null, suit = false }: { pose: Pose; isPlayer: boolean; gear?: Gear; suit?: boolean }) {
   const m = useMemo(() => {
     const mat = (c: string, r = 0.8) => new THREE.MeshStandardMaterial({ color: c, roughness: r, flatShading: true });
     return {
@@ -386,12 +402,42 @@ function Placeholder({ pose, isPlayer, gear = null }: { pose: Pose; isPlayer: bo
   const jKneeR = useRef<THREE.Group>(null);
   const phase = useRef(0);
   const cur = useRef<Joints>({ ...REST, shL: [...REST.shL], shR: [...REST.shR] });
+  const flames = useRef<(THREE.Group | null)[]>([]);
+  // body materials: the clothes, or the suit
+  const body = suit ? SUIT.armor : m.sweater;
+  const trimM = suit ? SUIT.accent : m.trim;
+  const legM = suit ? SUIT.armorDark : m.trousers;
+  const shoeM = suit ? SUIT.accent : m.shoes;
+  const soleM = suit ? SUIT.armorDark : m.soles;
+  const handM = suit ? SUIT.accent : m.skin;
 
   useFrame(({ clock }, dt) => {
     const t = clock.elapsedTime;
     const r = resolvePose(pose);
     let target: Joints;
-    if (r.kind === "move") {
+    const fp = runtime.player;
+    const flying = suit && isPlayer && fp.flying;
+    if (flying) {
+      // flight: hovering upright with palms down, leaning into it as he speeds up
+      const lean = Math.min(1, fp.speed / CRUISE);
+      const out = 0.42 * (1 - lean) + 0.1;
+      target = {
+        ...REST,
+        rootRX: lean * 1.15,
+        rootY: 0.3 * lean + Math.sin(t * 2.2) * 0.03,
+        torsoRX: -0.05 * lean,
+        headRX: -lean * 0.85,
+        headRY: 0,
+        shL: [0.15 + lean * 0.35, out],
+        shR: [0.15 + lean * 0.35, -out],
+        elL: -0.12,
+        elR: -0.12,
+        hipL: 0.04 + Math.sin(t * 1.7) * 0.03,
+        hipR: -0.04 - Math.sin(t * 1.7) * 0.03,
+        kneeL: 0.18 * (1 - lean) + 0.04,
+        kneeR: 0.12 * (1 - lean) + 0.04,
+      };
+    } else if (r.kind === "move") {
       const run = r.speed > 4.2;
       phase.current += dt * r.speed * (run ? 2.0 : 2.6);
       const a = Math.min(1, r.speed / 3.2) * (run ? 1.25 : 1);
@@ -416,7 +462,7 @@ function Placeholder({ pose, isPlayer, gear = null }: { pose: Pose; isPlayer: bo
     }
 
     // ease every joint toward its target (fast while walking, softer for poses)
-    const k = 1 - Math.exp(-dt * (r.kind === "move" ? 16 : 6));
+    const k = 1 - Math.exp(-dt * (flying ? 5 : r.kind === "move" ? 16 : 6));
     const c = cur.current;
     const L = (a: number, b: number) => a + (b - a) * k;
     c.rootY = L(c.rootY, target.rootY);
@@ -441,62 +487,142 @@ function Placeholder({ pose, isPlayer, gear = null }: { pose: Pose; isPlayer: bo
     jKneeL.current!.rotation.x = c.kneeL;
     jKneeR.current!.rotation.x = c.kneeR;
     jHead.current!.visible = !(isPlayer && useTown.getState().pov); // first person: no head in your eyes
+    // thruster flames (boots + palms), flickering with the thrust
+    const th = suit && isPlayer ? fp.thrust : 0;
+    for (const f of flames.current) {
+      if (!f) continue;
+      f.visible = th > 0.03;
+      if (f.visible) f.scale.set(0.7 + th * 0.5, th * (0.85 + Math.random() * 0.35), 0.7 + th * 0.5);
+    }
   });
 
-  const leg = (hip: React.RefObject<THREE.Group | null>, knee: React.RefObject<THREE.Group | null>, x: number) => (
+  /** a thruster flame pointing down from where it's attached */
+  const flame = (at: [number, number, number], r: number, len: number, i: number) => (
+    <group ref={(g) => void (flames.current[i] = g)} position={at} visible={false}>
+      <mesh position={[0, -len / 2, 0]} rotation-x={Math.PI} material={SUIT.flame}>
+        <coneGeometry args={[r, len, 10, 1, true]} />
+      </mesh>
+      <mesh position={[0, -len * 0.3, 0]} rotation-x={Math.PI} material={SUIT.flameCore}>
+        <coneGeometry args={[r * 0.5, len * 0.6, 8, 1, true]} />
+      </mesh>
+    </group>
+  );
+
+  const leg = (hip: React.RefObject<THREE.Group | null>, knee: React.RefObject<THREE.Group | null>, x: number, i: number) => (
     <group ref={hip} position={[x, 0.88, 0]}>
-      <mesh position={[0, -0.21, 0]} material={m.trousers} castShadow>
+      <mesh position={[0, -0.21, 0]} material={legM} castShadow>
         <capsuleGeometry args={[0.105, 0.3, 3, 8]} />
       </mesh>
       <group ref={knee} position={[0, -0.43, 0]}>
-        <mesh position={[0, -0.18, 0]} material={m.trousers} castShadow>
+        <mesh position={[0, -0.18, 0]} material={legM} castShadow>
           <capsuleGeometry args={[0.095, 0.28, 3, 8]} />
         </mesh>
-        <mesh position={[0, -0.4, 0.07]} material={m.shoes} castShadow>
+        {suit && (
+          // knee guard + a shin plate
+          <>
+            <mesh position={[0, 0.0, 0.08]} material={SUIT.accent}>
+              <sphereGeometry args={[0.07, 8, 6]} />
+            </mesh>
+            <mesh position={[0, -0.2, 0.085]} material={SUIT.armor}>
+              <boxGeometry args={[0.13, 0.24, 0.04]} />
+            </mesh>
+          </>
+        )}
+        <mesh position={[0, -0.4, 0.07]} material={shoeM} castShadow>
           <boxGeometry args={[0.17, 0.11, 0.32]} />
         </mesh>
-        <mesh position={[0, -0.46, 0.07]} material={m.soles}>
+        <mesh position={[0, -0.46, 0.07]} material={soleM}>
           <boxGeometry args={[0.18, 0.03, 0.33]} />
         </mesh>
+        {suit && flame([0, -0.48, 0.02], 0.075, 0.42, i)}
         {gear && <Skate kind={gear} />}
       </group>
     </group>
   );
 
-  const arm = (sh: React.RefObject<THREE.Group | null>, el: React.RefObject<THREE.Group | null>, x: number, right: boolean) => (
+  const arm = (sh: React.RefObject<THREE.Group | null>, el: React.RefObject<THREE.Group | null>, x: number, right: boolean, i: number) => (
     <group ref={sh} position={[x, 0.5, 0]}>
-      <mesh position={[0, -0.13, 0]} material={m.sweater} castShadow>
+      <mesh position={[0, -0.13, 0]} material={body} castShadow>
         <capsuleGeometry args={[0.075, 0.16, 3, 8]} />
       </mesh>
-      <group ref={el} position={[0, -0.27, 0]}>
-        <mesh position={[0, -0.11, 0]} material={m.sweater} castShadow>
-          <capsuleGeometry args={[0.068, 0.15, 3, 8]} />
+      {suit && (
+        // a shoulder plate
+        <mesh position={[x > 0 ? 0.02 : -0.02, 0.0, 0]} material={SUIT.accent}>
+          <sphereGeometry args={[0.105, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2]} />
         </mesh>
-        <mesh position={[0, -0.25, 0]} material={m.skin}>
+      )}
+      <group ref={el} position={[0, -0.27, 0]}>
+        <mesh position={[0, -0.11, 0]} material={suit ? SUIT.accent : m.sweater} castShadow>
+          <capsuleGeometry args={[suit ? 0.075 : 0.068, 0.15, 3, 8]} />
+        </mesh>
+        <mesh position={[0, -0.25, 0]} material={handM}>
           <icosahedronGeometry args={[0.072, 1]} />
         </mesh>
-        {right && <HandProp pose={pose} />}
+        {suit && (
+          // the palm repulsor
+          <mesh position={[0, -0.3, 0]} rotation-x={Math.PI / 2} material={SUIT.glow}>
+            <circleGeometry args={[0.03, 12]} />
+          </mesh>
+        )}
+        {suit && flame([0, -0.31, 0], 0.045, 0.24, i)}
+        {right && !suit && <HandProp pose={pose} />}
       </group>
     </group>
   );
 
   return (
     <group ref={jRoot}>
-      {leg(jHipL, jKneeL, -0.12)}
-      {leg(jHipR, jKneeR, 0.12)}
+      {leg(jHipL, jKneeL, -0.12, 0)}
+      {leg(jHipR, jKneeR, 0.12, 1)}
       <group ref={jTorso} position={[0, 0.9, 0]}>
-        <mesh position={[0, 0.3, 0]} material={m.sweater} castShadow>
+        <mesh position={[0, 0.3, 0]} material={body} castShadow>
           <capsuleGeometry args={[0.22, 0.32, 4, 10]} />
         </mesh>
-        <mesh position={[0, 0.05, 0]} material={m.trim}>
+        <mesh position={[0, 0.05, 0]} material={trimM}>
           <cylinderGeometry args={[0.235, 0.235, 0.07, 12]} />
         </mesh>
-        <mesh position={[0, 0.6, 0]} material={m.trim}>
+        <mesh position={[0, 0.6, 0]} material={trimM}>
           <cylinderGeometry args={[0.1, 0.12, 0.07, 10]} />
         </mesh>
-        {arm(jShL, jElL, -0.3, false)}
-        {arm(jShR, jElR, 0.3, true)}
+        {suit && (
+          // chest plate with the glowing core, and a pair of ab plates
+          <>
+            <mesh position={[0, 0.4, 0.17]} rotation-x={-0.1} material={SUIT.accent}>
+              <boxGeometry args={[0.3, 0.2, 0.08]} />
+            </mesh>
+            <mesh position={[0, 0.42, 0.215]} material={SUIT.glow}>
+              <circleGeometry args={[0.048, 16]} />
+            </mesh>
+            <mesh position={[0, 0.42, 0.212]} material={SUIT.armorDark}>
+              <torusGeometry args={[0.058, 0.012, 6, 16]} />
+            </mesh>
+            {[-0.06, 0.06].map((x) => (
+              <mesh key={x} position={[x, 0.2, 0.2]} material={SUIT.armorDark}>
+                <boxGeometry args={[0.1, 0.1, 0.03]} />
+              </mesh>
+            ))}
+          </>
+        )}
+        {arm(jShL, jElL, -0.3, false, 2)}
+        {arm(jShR, jElR, 0.3, true, 3)}
 
+        {suit ? (
+          <group ref={jHead} position={[0, 0.8, 0]}>
+            {/* helmet: shell, an orange faceplate, a glowing visor slit */}
+            <mesh material={SUIT.armor} castShadow>
+              <icosahedronGeometry args={[0.215, 2]} />
+            </mesh>
+            <mesh position={[0, -0.03, 0.105]} scale={[0.9, 0.95, 0.65]} material={SUIT.accent}>
+              <sphereGeometry args={[0.19, 14, 10, -Math.PI / 2, Math.PI, 0.5, 2.1]} />
+            </mesh>
+            <mesh position={[0, 0.03, 0.205]} material={SUIT.glow}>
+              <boxGeometry args={[0.2, 0.035, 0.02]} />
+            </mesh>
+            <mesh position={[0, 0.17, 0.04]} rotation-x={-0.3} material={SUIT.armorDark}>
+              <boxGeometry args={[0.05, 0.03, 0.3]} />
+            </mesh>
+          </group>
+        ) : (
         <group ref={jHead} position={[0, 0.8, 0]}>
           <mesh material={m.skin} castShadow>
             <icosahedronGeometry args={[0.2, 2]} />
@@ -539,6 +665,7 @@ function Placeholder({ pose, isPlayer, gear = null }: { pose: Pose; isPlayer: bo
             </mesh>
           ))}
         </group>
+        )}
       </group>
       <Props pose={pose} />
     </group>

@@ -219,7 +219,7 @@ function ProjectsPlaque() {
       <div className="flex items-baseline justify-between gap-3">
         <div>
           <p className="micro-label text-[0.58rem] text-muted">projects gallery</p>
-          <p className="font-display text-[1.25rem] leading-tight lowercase">every project</p>
+          <p className="font-display text-[1.25rem] leading-tight lowercase">projects</p>
         </div>
         <button
           type="button"
@@ -269,11 +269,6 @@ function ProjectCard({ p }: { p: Project }) {
       )}
       <h3 className="mt-2.5 text-[1rem] font-semibold tracking-tight">{p.name}</h3>
       <p className={`mt-1 text-[0.82rem] leading-relaxed text-ink/80 ${open ? "block" : "hidden"} md:block`}>{p.description}</p>
-      <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[0.62rem] tracking-[0.1em] text-muted uppercase">
-        {p.tags.map((t) => (
-          <li key={t}>{t}</li>
-        ))}
-      </ul>
       <div className="mt-3 flex items-center gap-2">
         <a href={p.repoUrl} target="_blank" rel="noopener noreferrer" className={linkCls}>
           <GitHubIcon size={13} /> view on github →

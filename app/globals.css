@@ -120,23 +120,34 @@ body {
   }
 }
 
-/* ── Normal website (list view): dark cards on a flat Tiffany page ─────
-   Page: solid Tiffany #81D8D0 (no pattern). Cards #17191C with a #2A2D31
-   hairline. Contrast (WCAG AA, all checked): text directly on the page is
-   ink #0E0F11 (11.9:1); on cards, cream #F2EDE4 15:1, muted #9A968E 6:1,
-   Tiffany 10.6:1; Tiffany on the ink button 11.9:1. Tiffany text never sits
-   on the Tiffany page. Orange is only a hover accent, never text.
-   Space Grotesk (name, headings) + DM Sans (body), see app/fonts/list.ts.
-   Desktop (≥1100 × 700): a 100dvh grid with no page scroll. Smaller: one
-   scrolling column (top bar, education, experience, extracurriculars,
-   projects, contact: the DOM order). */
+/* ── Normal website (list view): navy cards on a white page ─────────────
+   All colours live in the variables just below (swap them there).
+   Contrast (WCAG AA, all checked; ratios in the change log): cream text
+   on teal cards, muted #A9C9C4 on teal, Tiffany links on teal, ink on the
+   Tiffany pill, ink section labels on the Tiffany page. Orange is only a
+   small accent (hover arrow, a 2px top edge on hover, the focus ring with a
+   cream offset). No text is ever cut short: it all wraps in full.
+   ≥1100px wide: three columns. ≥800px tall too: one screen, no page scroll
+   (a 100dvh grid). Shorter: the same columns, the page scrolls. <1100px:
+   one column (DOM order: top bar, education, experience, extracurriculars,
+   projects, contact). Space Grotesk + DM Sans (app/fonts/list.ts). */
 .list-view {
-  --lv-page: #81d8d0;
-  --lv-ink: #0e0f11;
-  --lv-card: #17191c;
-  --lv-line: #2a2d31;
-  --lv-text: #f2ede4;
-  --lv-muted: #9a968e;
+  /* ── colours ── */
+  --lv-page: #ffffff; /* flat white page */
+  --lv-label: #0e1630; /* section labels on the page */
+  --lv-card: #13224a; /* every card: navy */
+  --lv-line: #22366b; /* card border */
+  --lv-line-hover: #3d5596;
+  --lv-text: #ffffff; /* white, on cards */
+  --lv-muted: #b8c3dc; /* muted, on cards */
+  --lv-link: #81d8d0; /* links on cards (Tiffany) */
+  --lv-chip: #1d3164; /* chips on cards */
+  --lv-pill: #81d8d0; /* the Tiffany pill buttons */
+  --lv-pill-text: #0e1630;
+  --lv-accent: #f37021; /* orange: small touches only */
+  --lv-logo: #ffffff; /* logo tiles */
+  --lv-shadow: 0 10px 28px -16px rgb(12 22 50 / 0.45);
+  --lv-shadow-up: 0 16px 32px -14px rgb(12 22 50 / 0.55);
   --font-manrope: var(--font-dm-sans);
   font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
   color: var(--lv-text);
@@ -155,31 +166,40 @@ body {
   background: var(--lv-card);
   border: 1px solid var(--lv-line);
   border-radius: 14px;
+  box-shadow: var(--lv-shadow);
+  color: var(--lv-text);
+}
+.list-view [data-logo] {
+  background: var(--lv-logo);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.4);
 }
 .list-view .lv-pad {
-  padding: 0.85rem 1rem;
+  padding: 0.8rem 1rem;
+}
+.list-view .lv-notice {
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
 }
 
-/* top bar */
+/* top bar: a cream card too */
 .list-view .lv-top {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem 1.5rem;
-  min-height: 72px;
-  padding: 0.6rem 1.1rem;
-  color: var(--lv-ink);
-  border: 1.5px solid var(--lv-ink);
+  gap: 0.6rem 1.5rem;
+  padding: 0.65rem 1.1rem;
+  background: var(--lv-card);
+  border: 1px solid var(--lv-line);
   border-radius: 14px;
+  box-shadow: var(--lv-shadow);
 }
 .list-view .lv-name {
   font-family: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.05;
-  font-size: clamp(1.45rem, 3.4vh, 2.1rem);
-  white-space: nowrap;
+  font-size: clamp(1.45rem, 3.2vh, 2.05rem);
 }
 .list-view .lv-sub {
   margin-top: 0.3rem;
@@ -187,7 +207,7 @@ body {
   align-items: center;
   gap: 0.45rem;
   font-size: 0.88rem;
-  color: var(--lv-ink);
+  color: var(--lv-muted);
 }
 .list-view .lv-links {
   display: flex;
@@ -201,11 +221,11 @@ body {
 .list-view .lv-label {
   margin: 0 0 0.45rem 0.2rem;
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.7rem;
+  font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--lv-ink);
-  font-weight: 600;
+  color: var(--lv-label);
 }
 .list-view .lv-strong {
   font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
@@ -220,127 +240,183 @@ body {
 .list-view .lv-small {
   font-size: 0.85rem;
 }
-.list-view .lv-tag {
+.list-view .lv-chip {
   display: inline-block;
-  align-self: flex-start;
-  border: 1px solid rgb(129 216 208 / 0.35);
+  border: 1px solid var(--lv-line);
+  background: var(--lv-chip);
   border-radius: 999px;
-  padding: 0.05rem 0.5rem;
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  color: var(--tiffany);
-}
-.list-view .lv-tag-text {
-  font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  font-size: 0.8rem;
-  padding: 0.12rem 0.6rem;
+  padding: 0.08rem 0.55rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--lv-text);
 }
 
-/* experience */
+/* experience: role + dates / company + chip / the line */
 .list-view .lv-exp-list {
   display: flex;
   flex-direction: column;
   background: var(--lv-card);
   border: 1px solid var(--lv-line);
   border-radius: 14px;
-  padding: 0.25rem 0.9rem;
+  box-shadow: var(--lv-shadow);
+  padding: 0.2rem 0.95rem;
 }
 .list-view .lv-exp-row {
   display: flex;
-  align-items: center;
-  gap: 0.7rem;
+  align-items: center; /* the logo sits centred against the row's text */
+  gap: 0.75rem;
   padding: 0.5rem 0;
   border-top: 1px solid var(--lv-line);
 }
 .list-view .lv-exp-row:first-child {
   border-top: 0;
 }
-.list-view .lv-exp-title {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.list-view .lv-exp-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 0.75rem;
+}
+.list-view .lv-exp-role {
   font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
   font-weight: 600;
-  font-size: 0.86rem;
+  font-size: 0.9rem;
   line-height: 1.3;
 }
-.list-view .lv-company {
-  font-weight: 400;
+.list-view .lv-dates {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--lv-muted);
+  text-align: right;
+}
+.list-view .lv-exp-company {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem 0.45rem;
+  font-size: 0.84rem;
+  line-height: 1.3;
   color: var(--lv-muted);
 }
-.list-view .lv-dates {
-  flex-shrink: 0;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--lv-muted);
-  white-space: nowrap;
-  text-align: right;
+.list-view .lv-exp-company .lv-chip {
+  font-size: 0.68rem;
+  padding: 0 0.45rem;
 }
 .list-view .lv-exp-line {
   margin-top: 0.1rem;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   line-height: 1.35;
-  color: var(--lv-muted);
 }
 
-/* projects */
+/* projects: identical tiles (3 columns, equal rows), the whole tile is the link */
 .list-view .lv-proj-grid {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.65rem;
+  grid-auto-rows: 1fr; /* every row as tall as the tallest: all tiles identical */
+}
+.list-view .lv-proj-grid > li {
+  display: flex;
+  min-height: 0;
 }
 .list-view .lv-project {
+  position: relative;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
-  height: 100%;
-  padding: 0.85rem 0.95rem;
-  overflow: hidden;
+  justify-content: center; /* name + description centred in the tile */
+  gap: 0.35rem;
+  padding: 0.75rem 2rem 0.75rem 0.9rem;
   transition:
+    transform 0.2s,
     border-color 0.2s,
     box-shadow 0.2s;
 }
+.list-view .lv-project::before {
+  content: "";
+  position: absolute;
+  inset: -1px -1px auto -1px;
+  height: 2px;
+  border-radius: 14px 14px 0 0;
+  background: var(--lv-accent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
 .list-view .lv-project:hover {
-  border-color: #a9e6e0;
-  box-shadow: 0 0 0 1px rgb(169 230 224 / 0.4), 0 10px 28px -12px rgb(14 15 17 / 0.6);
+  transform: translateY(-2px);
+  border-color: var(--lv-line-hover);
+  box-shadow: var(--lv-shadow-up);
+}
+.list-view .lv-project:hover::before {
+  opacity: 1;
 }
 .list-view .lv-project:hover .lv-arrow {
-  color: var(--orange);
+  color: var(--lv-accent);
 }
 .list-view .lv-arrow {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
   color: var(--lv-muted);
   transition: color 0.2s;
 }
 .list-view .lv-proj-name {
   font-family: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
   font-weight: 600;
-  font-size: 0.98rem;
+  font-size: 1rem;
   letter-spacing: -0.01em;
   line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 .list-view .lv-proj-desc {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  font-size: 0.8rem;
-  line-height: 1.4;
+  font-size: 0.82rem;
+  line-height: 1.35;
   color: var(--lv-muted);
 }
-.list-view .lv-project .lv-tag {
-  margin-top: auto;
+
+/* extracurriculars: one fact per row with an icon; this card fills the rest
+   of the right column on desktop */
+.list-view .lv-extra {
+  display: flex;
+  flex-direction: column;
+}
+.list-view .lv-extra-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  gap: 0.35rem;
+}
+.list-view .lv-extra-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.92rem;
+  line-height: 1.3;
+}
+.list-view .lv-extra-icon {
+  flex-shrink: 0;
+  color: var(--lv-link);
 }
 
-/* contact */
+/* contact: one compact block */
 .list-view .lv-contact {
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem 0.75rem;
+}
+.list-view .lv-contact-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 }
 .list-view .lv-contact-title {
   font-family: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
   font-weight: 600;
-  font-size: 1.25rem;
+  font-size: clamp(1.2rem, 2.2vh, 1.55rem);
   letter-spacing: -0.02em;
 }
 .list-view .lv-foot {
@@ -354,7 +430,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  height: 2.35rem;
+  height: 2.3rem;
   border-radius: 999px;
   padding: 0 1rem;
   font-weight: 600;
@@ -363,78 +439,47 @@ body {
   transition:
     background-color 0.2s,
     color 0.2s,
-    border-color 0.2s;
+    box-shadow 0.2s;
 }
-/* on cards: a Tiffany pill with ink text (the contact button) */
+/* Tiffany pills with ink text: "explore in 3D", "Send me a note" */
 .list-view .lv-btn {
-  background: var(--tiffany);
-  color: var(--lv-ink);
+  background: var(--lv-pill);
+  color: var(--lv-pill-text);
 }
 .list-view .lv-btn:hover {
   background: var(--lv-text);
 }
-/* on the page: "explore in 3D" is an ink pill with Tiffany text */
-.list-view .lv-top .lv-btn {
-  background: var(--lv-ink);
-  color: var(--tiffany);
-}
-.list-view .lv-top .lv-btn:hover {
-  background: #1d2023;
-  box-shadow: 0 0 0 2px var(--orange);
-}
+/* "switch mode": a cream outline pill */
 .list-view .lv-btn-ghost {
-  border: 1.5px solid var(--lv-ink);
-  color: var(--lv-ink);
+  border: 1.5px solid var(--lv-text);
+  color: var(--lv-text);
 }
 .list-view .lv-btn-ghost:hover {
-  background: var(--lv-ink);
-  color: var(--tiffany);
+  background: var(--lv-text);
+  color: var(--lv-card);
 }
-.list-view .lv-links > a {
-  color: var(--lv-ink);
+.list-view .lv-links > a,
+.list-view .lv-inline-link {
+  color: var(--lv-link);
   font-weight: 500;
   text-decoration: underline;
-  text-decoration-color: rgb(14 15 17 / 0.5);
+  text-decoration-color: rgb(129 216 208 / 0.55);
   text-underline-offset: 0.22em;
 }
-.list-view .lv-links > a:hover {
-  text-decoration-color: var(--lv-ink);
+.list-view .lv-links > a:hover,
+.list-view .lv-inline-link:hover {
+  text-decoration-color: var(--lv-link);
   text-decoration-thickness: 2px;
 }
-.list-view .lv-inline-link {
-  color: var(--tiffany);
-  text-decoration: underline;
-  text-decoration-color: rgb(129 216 208 / 0.45);
-  text-underline-offset: 0.22em;
-}
-.list-view .lv-inline-link:hover {
-  text-decoration-color: var(--orange);
-}
-/* focus: Tiffany on the dark cards, ink on the Tiffany page */
+/* focus: an orange ring with a cream offset */
 .list-view :focus-visible {
-  outline: 2px solid var(--tiffany);
+  outline: 2px solid var(--lv-accent);
   outline-offset: 2px;
-  border-radius: 6px;
-}
-.list-view .lv-top :focus-visible,
-.list-view .lv-label:focus-visible {
-  outline-color: var(--lv-ink);
-}
-.list-view .lv-notice {
-  padding: 0.6rem 1rem;
-  font-size: 0.9rem;
+  box-shadow: 0 0 0 2px var(--lv-text);
+  border-radius: 8px;
 }
 
-/* stacked (phones, narrow or short windows): titles wrap, dates drop under them */
-@media not ((min-width: 1100px) and (min-height: 700px)) {
-  .list-view .lv-exp-title {
-    white-space: normal;
-  }
-  .list-view .lv-exp-row > div > div {
-    flex-wrap: wrap;
-    row-gap: 0.1rem;
-  }
-}
+/* stacked (<1100px): one column */
 .list-view .lv-grid {
   display: flex;
   flex-direction: column;
@@ -446,25 +491,34 @@ body {
   }
 }
 
-/* desktop: everything on one screen, no page scroll */
-@media (min-width: 1100px) and (min-height: 700px) {
-  .list-view .lv-frame {
-    height: 100dvh;
-    padding: clamp(0.75rem, 1.6vh, 1.25rem);
-    gap: clamp(0.6rem, 1.4vh, 1rem);
-    overflow: hidden;
-  }
+/* ≥1100px: three columns (the page scrolls if it's shorter than 800px) */
+@media (min-width: 1100px) {
   .list-view .lv-grid {
-    flex: 1;
-    min-height: 0;
     display: grid;
-    gap: clamp(0.6rem, 1.4vh, 1rem) 1rem;
-    grid-template-columns: minmax(0, 34fr) minmax(0, 40fr) minmax(0, 26fr);
-    grid-template-rows: auto auto 1fr;
+    gap: 0.9rem 1rem;
+    grid-template-columns: minmax(0, 33fr) minmax(0, 46fr) minmax(0, 21fr);
+    grid-template-rows: auto 1fr auto;
     grid-template-areas:
       "exp proj edu"
       "exp proj extra"
       "exp proj contact";
+    align-items: start;
+  }
+  .list-view .lv-area-extra {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+  }
+  .list-view .lv-area-extra .lv-extra {
+    flex: 1;
+  }
+  .list-view .lv-area-proj {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+  }
+  .list-view .lv-area-proj .lv-proj-grid {
+    flex: 1;
   }
   .list-view .lv-area-edu {
     grid-area: edu;
@@ -474,61 +528,74 @@ body {
   }
   .list-view .lv-area-contact {
     grid-area: contact;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-  }
-  .list-view .lv-area-contact .lv-contact {
-    flex: 1;
-    justify-content: center;
-  }
-  .list-view .lv-area-exp,
-  .list-view .lv-area-proj {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
   }
   .list-view .lv-area-exp {
     grid-area: exp;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+  }
+  .list-view .lv-area-exp .lv-exp-list {
+    flex: 1;
+    justify-content: space-between;
   }
   .list-view .lv-area-proj {
     grid-area: proj;
   }
+  .list-view .lv-proj-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ≥1100 × 800: everything on one screen, no page scroll */
+@media (min-width: 1100px) and (min-height: 800px) {
+  .list-view .lv-frame {
+    height: 100dvh;
+    padding: clamp(0.7rem, 1.4vh, 1.1rem);
+    gap: clamp(0.55rem, 1.2vh, 0.9rem);
+    overflow: hidden;
+  }
+  .list-view .lv-grid {
+    flex: 1;
+    min-height: 0;
+    gap: clamp(0.55rem, 1.2vh, 0.9rem) 1rem;
+  }
+  .list-view .lv-area-exp {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
   .list-view .lv-exp-list {
     flex: 1;
     min-height: 0;
+    justify-content: space-between;
   }
   .list-view .lv-exp-row {
-    flex: 1;
-    min-height: 0;
-    padding: 0;
+    padding: clamp(0.15rem, 0.35vh, 0.45rem) 0;
   }
+  .list-view .lv-exp-list {
+    padding-block: 0.1rem;
+  }
+  /* type scales a little with the window height (never under 12px) */
+  .list-view .lv-exp-role {
+    font-size: clamp(0.8rem, 1.5vh, 0.98rem);
+    line-height: 1.25;
+  }
+  .list-view .lv-exp-company,
   .list-view .lv-exp-line {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .list-view .lv-proj-grid {
-    flex: 1;
-    min-height: 0;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-rows: repeat(3, minmax(0, 1fr));
-  }
-  .list-view .lv-proj-grid > li {
-    min-height: 0;
-  }
-  /* scale type with the window height so it all fits from 768 to 1080 tall */
-  .list-view .lv-exp-title {
-    font-size: clamp(0.78rem, 1.6vh, 0.95rem);
-  }
-  .list-view .lv-exp-line {
-    font-size: clamp(0.72rem, 1.45vh, 0.86rem);
+    font-size: clamp(0.75rem, 1.36vh, 0.88rem);
+    line-height: 1.28;
   }
   .list-view .lv-proj-name {
-    font-size: clamp(0.88rem, 1.85vh, 1.1rem);
+    font-size: clamp(0.95rem, 1.75vh, 1.1rem);
   }
   .list-view .lv-proj-desc {
-    font-size: clamp(0.74rem, 1.5vh, 0.9rem);
+    font-size: clamp(0.82rem, 1.45vh, 0.92rem); /* never under 13px */
+  }
+  .list-view .lv-area-proj,
+  .list-view .lv-proj-grid {
+    min-height: 0;
   }
 }
 

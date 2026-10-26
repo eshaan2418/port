@@ -66,6 +66,7 @@ export function leaveInterior() {
     p.z = pl.approach.z - pl.front.z * 0.1;
     p.yaw = Math.atan2(pl.front.x, pl.front.z);
     p.idle = null;
+    Object.assign(p, { y: 0, flying: false, vx: 0, vy: 0, vz: 0, thrust: 0 }); // he steps out on the ground
     const c = runtime.camera;
     c.yaw = Math.atan2(pl.front.x, pl.front.z); // on the street side, looking back at the house
     c.pitch = 0.24;

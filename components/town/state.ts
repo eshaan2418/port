@@ -44,6 +44,10 @@ type TownState = {
   ready: boolean;
   nearDoor: BuildingId | null;
   travelling: BuildingId | null;
+  /** he's in the air */
+  airborne: boolean;
+  /** the in-world tutorial: the current step (see hud/Tutorial.tsx), or null when it isn't running */
+  tutorial: number | null;
   /** fast-travel request; the player consumes it and clears it */
   travelRequest: { id: BuildingId; at: number } | null;
   /** "how to move around" card (after the intro, or reopened with "?") */
@@ -90,6 +94,8 @@ type TownState = {
   setReady: () => void;
   setNearDoor: (id: BuildingId | null) => void;
   setTravelling: (id: BuildingId | null) => void;
+  setAirborne: (v: boolean) => void;
+  setTutorial: (step: number | null) => void;
   travelTo: (id: BuildingId) => void;
   clearTravelRequest: () => void;
   openStart: () => void;
@@ -124,6 +130,8 @@ export const useTown = create<TownState>((set, get) => ({
   ready: false,
   nearDoor: null,
   travelling: null,
+  airborne: false,
+  tutorial: null,
   travelRequest: null,
   startOpen: false,
   focusLost: false,
@@ -149,6 +157,8 @@ export const useTown = create<TownState>((set, get) => ({
   setReady: () => set({ ready: true, loading: 1 }),
   setNearDoor: (id) => get().nearDoor !== id && set({ nearDoor: id }),
   setTravelling: (id) => set({ travelling: id }),
+  setAirborne: (v) => get().airborne !== v && set({ airborne: v }),
+  setTutorial: (step) => set({ tutorial: step }),
   travelTo: (id) => set({ travelRequest: { id, at: performance.now() } }),
   clearTravelRequest: () => set({ travelRequest: null }),
   openStart: () => set({ startOpen: true }),
@@ -177,7 +187,24 @@ export const useTown = create<TownState>((set, get) => ({
 
 /** Mutable per-frame state shared between the controller, camera, audio and HUD. */
 export const runtime = {
-  player: { x: 0, y: 0, z: 0, yaw: 0, speed: 0, moving: false, running: false, idle: null as IdlePose | null },
+  player: {
+    x: 0,
+    y: 0,
+    z: 0,
+    yaw: 0,
+    speed: 0,
+    moving: false,
+    running: false,
+    idle: null as IdlePose | null,
+    /** the suit: airborne (not standing on the ground or a roof) */
+    flying: false,
+    /** flight velocity (m/s) */
+    vx: 0,
+    vy: 0,
+    vz: 0,
+    /** how hard the thrusters are firing, 0–1 (flames + sound) */
+    thrust: 0,
+  },
   /** intro choreography: a path the outdoor Eshaan follows (with heights, for the stoop) */
   introWalk: null as { pts: { x: number; y: number; z: number }[]; speed: number; i: number } | null,
   camera: {
@@ -199,6 +226,9 @@ export const runtime = {
     joy: { x: 0, y: 0, active: false },
     /** set by click/tap-to-walk; consumed by the player controller */
     walkTo: null as { x: number; z: number } | null,
+    /** touch: the fly ▲ / ▼ buttons are held */
+    flyUp: false,
+    flyDown: false,
     enter: false,
   },
   /** Home actor's head on screen (for the speech bubble), written by the interior rig */
@@ -214,6 +244,8 @@ export const runtime = {
   boomReset: null as number | null,
   /** where Eshaan is on screen, for the "get back focus" prompt and edge arrow */
   focus: { lost: false, offscreen: false, sx: 0, sy: 0 },
+  /** outdoor Eshaan's head on screen, in px (for the flight-hint speech bubble), written by the camera rig */
+  head: { x: 0, y: 0, visible: false },
   /** visual day amount (0 night → 1 day), eased toward the clock's target */
   env: {
     dayness: 1,
