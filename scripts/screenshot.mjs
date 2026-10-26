@@ -25,7 +25,7 @@ page.on("pageerror", (e) => logs.push(e.message));
 if (process.env.INTRO === "1" && process.env.TIME !== undefined)
   await page.addInitScript((h) => (window.__forceHour = h), +process.env.TIME); // the store reads it on creation
 // the first-visit tutorial would talk over every shot: mark it done unless TUTORIAL=1
-if (process.env.TUTORIAL !== "1") await page.addInitScript(() => localStorage.setItem("eshaan-city-tutorial", "done"));
+if (process.env.TUTORIAL !== "1") await page.addInitScript(() => (window.__noTutorial = true));
 await page.goto(process.env.URL ?? "http://localhost:3000/?view=city", { waitUntil: "load", timeout: 60000 });
 await page.waitForFunction(() => window.__town?.useTown.getState().ready, null, { timeout: 60000 });
 

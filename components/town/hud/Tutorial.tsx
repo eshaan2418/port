@@ -8,29 +8,15 @@ import { runtime, useTown } from "../state";
  * a time, in a speech bubble over his head. Each step waits until you've
  * actually done it (walked every direction, run, flown up, flown around,
  * landed, fast travelled, gone inside), says "nice!", then moves on. It runs
- * once (remembered in localStorage); "skip" ends it, and the "?" card can
- * replay it. While he's off screen (first person) the bubble docks above the
+ * after every intro; "skip" ends it, and the "?" card can replay it. While he's off screen (first person) the bubble docks above the
  * fast-travel bar.
  */
-
-const DONE_KEY = "eshaan-city-tutorial";
-
-export function tutorialDone() {
-  try {
-    return localStorage.getItem(DONE_KEY) === "done";
-  } catch {
-    return false;
-  }
-}
 
 export function startTutorial() {
   useTown.getState().setTutorial(0);
 }
 
 function finishTutorial() {
-  try {
-    localStorage.setItem(DONE_KEY, "done");
-  } catch {}
   useTown.getState().setTutorial(null);
 }
 

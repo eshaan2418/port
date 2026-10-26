@@ -5,7 +5,7 @@ import { line } from "@/data/speech";
 import { runtime, useTown, type IntroPhase } from "../state";
 import { buildingById, placement, toWorld } from "../world/layout";
 import { fadeSwap, speak } from "../interior/transitions";
-import { startTutorial, tutorialDone } from "../hud/Tutorial";
+import { startTutorial } from "../hud/Tutorial";
 
 /**
  * The opening sequence, played once per page load:
@@ -284,8 +284,9 @@ function handoff(instant: boolean) {
   intro.done = true;
   intro.skipping = false;
   s.setIntroPhase(null);
-  // first visit: he teaches the controls himself; after that, the "how to move around" card
-  if (tutorialDone()) s.openStart();
+  // after every intro he teaches the controls himself
+  // (the screenshot harness sets __noTutorial and gets the "how to move around" card instead)
+  if ((window as unknown as { __noTutorial?: boolean }).__noTutorial) s.openStart();
   else startTutorial();
 }
 
