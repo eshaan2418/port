@@ -23,3 +23,15 @@ export const extracurriculars: Extracurricular[] = [
     link: "https://awsyorkucloud.com/",
   },
 ];
+
+/** the short list for the normal website's extracurriculars card (exactly these facts) */
+export const extracurricularHighlights = [
+  "world champion in martial arts",
+  "Guinness World Records holder",
+  "speed inline roller skater",
+  "ice skating",
+  "ICPC",
+  "competitive programming",
+  "math",
+  "AWS Student Builder Groups",
+];

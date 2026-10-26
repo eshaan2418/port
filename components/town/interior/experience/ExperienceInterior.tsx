@@ -7,12 +7,12 @@ import { RoundedBox, Text } from "@react-three/drei";
 import * as THREE from "three";
 import { EXPERIENCE_FLOORS } from "../floors";
 import { Tower, type FloorDef, type RoomProps } from "../Tower";
-import { Board, Box, Chair, Cyl, Desk, Label, LogoPlaque, Monitor, Plant, Rug, Shelf, Window, mat, screenMat, useCanvasTexture } from "../kit";
+import { Board, Box, Chair, Cyl, Desk, LogoPlaque, Monitor, Plant, Rug, Shelf, Window, mat, screenMat, useCanvasTexture } from "../kit";
 import { BOARD_FONTS } from "../../scene/Buildings";
 
 /**
- * Experience Tower: 10 floors, newest first (Cohere on floor 01 at the top
- * down to AIESEC on floor 10), one small themed room per role. The only real
+ * Experience Tower: one small themed room per role, in the order of
+ * data/experiences.ts (Cohere at the top down to AIESEC). The only real
  * logos are the small brass plaques by the elevator (from /public/logos/).
  */
 
@@ -223,19 +223,14 @@ function Vector({ active }: RoomProps) {
       g.lineTo(x, h - 50);
       g.stroke();
     }
-    // one benchmark series by percentile: no comparison drawn, no numbers
-    ["p50", "p90", "p99"].forEach((lab, i) => {
-      const x0 = 110 + i * 190;
-      const v = [0.35, 0.55, 0.8][i];
+    // an unlabelled chart: decoration only, no numbers or claims
+    [0.35, 0.55, 0.8].forEach((v, i) => {
       g.fillStyle = "#81D8D0";
-      g.fillRect(x0, h - 60 - v * 270, 90, v * 270);
-      g.fillStyle = "#F6EFE3";
-      g.font = "600 26px ui-monospace, monospace";
-      g.fillText(lab, x0 + 22, h - 22);
+      g.fillRect(110 + i * 190, h - 40 - v * 290, 90, v * 290);
     });
     g.fillStyle = "#F37021";
     g.font = "600 24px ui-monospace, monospace";
-    g.fillText("decode latency", 40, 26);
+    g.fillText("inference", 40, 26);
   });
   const gm = useMemo(() => screenMat(graph), [graph]);
   const ledMat = useMemo(() => new THREE.MeshBasicMaterial({ color: "#81D8D0", toneMapped: false }), []);
@@ -301,7 +296,7 @@ function Aws({ active }: RoomProps) {
     g.fillRect(0, 0, w, 16);
     g.fillStyle = "#121212";
     g.font = "700 46px system-ui, sans-serif";
-    g.fillText("hands-on workshop", 36, 110);
+    g.fillText("builder group", 36, 110);
     g.fillStyle = "#81D8D0";
     for (const [x, y, r] of [
       [120, 220, 46],
@@ -357,7 +352,7 @@ function Mali({ active }: RoomProps) {
         w={1.7}
         h={1.0}
         color="#FFFFFF"
-        lines={["pytorch ml pipelines", "distributed training", "model optimization"]}
+        lines={["founding engineer"]}
         size={0.11}
       />
       {/* folding table stacked with GPUs */}
@@ -452,11 +447,12 @@ function Itreb() {
       g.lineTo(c, d2);
       g.stroke();
     }
-    box(245, 35, "frontend", "#81D8D0");
-    box(245, 175, "rest api", "#F37021");
-    box(65, 315, "service", "#F6C177");
-    box(245, 315, "service", "#F6C177");
-    box(425, 315, "service", "#F6C177");
+    // an unlabelled diagram (decoration only)
+    box(245, 35, "", "#81D8D0");
+    box(245, 175, "", "#F37021");
+    box(65, 315, "", "#F6C177");
+    box(245, 315, "", "#F6C177");
+    box(425, 315, "", "#F6C177");
   });
   const dm = useMemo(() => screenMat(diagram), [diagram]);
   return (
@@ -652,35 +648,93 @@ function Aiesec({ active }: RoomProps) {
           </mesh>
         </group>
       ))}
-      <Label at={[2.2, 0.79, 0.75]} text="event plan" size={0.08} rot={[-Math.PI / 2, 0, 0]} />
     </group>
   );
 }
 
-const ROOMS = [Cohere, Wealthsimple, Shopify, Vector, Aws, Mali, Blueprint, Itreb, Hospital, Aiesec];
-const WALLS = ["#ECEAF6", "#F4F1EA", "#EEF4E6", "#DCE3EA", "#F5EBDD", "#EFE2D6", "#E4ECF6", "#E6EEED", "#E8F5F2", "#E5EEF8"];
-const FLOORS = ["#3A3A48", "#D9CFBF", "#B98D62", "#56606B", "#9C7B57", "#8C7A66", "#C9B79C", "#8A6446", "#DCE7E4", "#B8865B"];
-/** where he stands, presenting the room */
-const SPOTS: [number, number, number][] = [
-  [0.45, 0, 0.35],
-  [0.5, 0, 0.3],
-  [-0.6, 0, 0.6],
-  [-0.2, 0, 0.1],
-  [-0.9, 0, 0.6],
-  [0.6, 0, 0.3],
-  [-0.6, 0, 1.0],
-  [1.3, 0, 0.3],
-  [0.6, 0, 0.5],
-  [1.0, 0, -0.5],
-];
+/* ── york university (TA): a lecture room ───────────────────────────── */
+function YorkTa() {
+  return (
+    <group>
+      <LogoPlaque at={PLAQUE_AT} src={logoOf("york-ta")} />
+      <Board at={[1.0, 1.7, BACK + 0.01]} w={2.6} h={1.15} color="#FFFFFF" frame="#C7CBCF" lines={["eecs 1021"]} size={0.2} />
+      {/* lectern */}
+      <Box at={[2.9, 0.55, -0.9]} size={[0.6, 1.1, 0.45]} color="#8A6446" />
+      <Box at={[2.9, 1.12, -0.95]} size={[0.66, 0.05, 0.5]} color="#5A3B2B" rot={[-0.25, 0, 0]} />
+      {/* rows of student desks */}
+      {[0, 1].flatMap((row) =>
+        [0, 1, 2].map((k) => (
+          <group key={`${row}${k}`}>
+            <Desk at={[-0.4 + k * 1.15, 0, 0.1 + row * 1.0]} w={0.8} d={0.45} color="#C9B79C" legs="#4a4a4a" />
+            <Chair at={[-0.4 + k * 1.15, 0, 0.55 + row * 1.0]} yaw={Math.PI} color="#3D5A8C" />
+          </group>
+        )),
+      )}
+      <Box at={[1.0, 1.02, BACK + 0.06]} size={[2.4, 0.04, 0.1]} color="#C7CBCF" cast={false} />
+    </group>
+  );
+}
 
-const floors: FloorDef[] = EXPERIENCE_FLOORS.map((meta, i) => ({
-  meta,
-  wall: WALLS[i],
-  floor: FLOORS[i],
-  Room: ROOMS[i],
-  spot: { pos: SPOTS[i], yaw: 0, pose: "idle" },
-}));
+/* ── vex robotics: a small robot workshop ─────────────────────────────── */
+function VexWorkshop({ active }: RoomProps) {
+  const bot = useRef<THREE.Group>(null);
+  useFrame(({ clock }) => {
+    const g = bot.current;
+    if (!g) return;
+    const t = clock.elapsedTime * (active ? 0.6 : 0.2);
+    g.position.set(0.9 + Math.cos(t) * 0.9, 0, 0.45 + Math.sin(t) * 0.5);
+    g.rotation.y = -t;
+  });
+  return (
+    <group>
+      <LogoPlaque at={PLAQUE_AT} src={logoOf("vex-robotics")} />
+      {/* foam field tiles */}
+      {Array.from({ length: 6 }, (_, i) => (
+        <Box key={i} at={[0.0 + (i % 3) * 0.9, 0.015, 0.0 + Math.floor(i / 3) * 0.9]} size={[0.88, 0.03, 0.88]} color={i % 2 ? "#6E7680" : "#5A616B"} cast={false} />
+      ))}
+      {/* the robot: a chassis, four wheels, a little arm */}
+      <group ref={bot}>
+        <Box at={[0, 0.16, 0]} size={[0.42, 0.12, 0.36]} color="#C7CBCF" />
+        <Box at={[0, 0.3, -0.05]} size={[0.26, 0.16, 0.2]} color="#B8352E" />
+        <Box at={[0, 0.42, 0.12]} size={[0.04, 0.24, 0.04]} color="#2B2A2E" rot={[0.5, 0, 0]} />
+        {[-1, 1].flatMap((sx) => [-1, 1].map((sz) => <Cyl key={`${sx}${sz}`} at={[sx * 0.23, 0.08, sz * 0.13]} r={0.08} h={0.05} rot={[0, 0, Math.PI / 2]} color="#2B2A2E" />))}
+      </group>
+      {/* workbench with parts and a laptop */}
+      <Desk at={[2.4, 0, -1.5]} w={1.8} d={0.7} color="#8A6446" />
+      {[0, 1, 2, 3].map((i) => (
+        <Box key={i} at={[1.75 + i * 0.22, 0.8, -1.45]} size={[0.16, 0.04, 0.3]} color="#C7CBCF" rot={[0, i * 0.3, 0]} cast={false} />
+      ))}
+      <group position={[2.85, 0.79, -1.45]} rotation-y={-0.3}>
+        <Box at={[0, 0, 0]} size={[0.44, 0.02, 0.3]} color="#C7CBCF" />
+        <Box at={[0, 0.14, -0.15]} size={[0.44, 0.28, 0.015]} color="#C7CBCF" rot={[-0.2, 0, 0]} />
+      </group>
+      {/* toolbox */}
+      <Box at={[3.2, 0.25, 0.9]} size={[0.6, 0.5, 0.4]} color="#B8352E" />
+      <Box at={[3.2, 0.53, 0.9]} size={[0.3, 0.05, 0.05]} color="#2B2A2E" cast={false} />
+    </group>
+  );
+}
+
+/** each room, by experience id */
+const ROOM_FOR: Record<string, { Room: (p: RoomProps) => React.JSX.Element; wall: string; floor: string; spot: [number, number, number] }> = {
+  cohere: { Room: Cohere, wall: "#ECEAF6", floor: "#3A3A48", spot: [0.45, 0, 0.35] },
+  wealthsimple: { Room: Wealthsimple, wall: "#F4F1EA", floor: "#D9CFBF", spot: [0.5, 0, 0.3] },
+  shopify: { Room: Shopify, wall: "#EEF4E6", floor: "#B98D62", spot: [-0.6, 0, 0.6] },
+  "york-ta": { Room: YorkTa, wall: "#E9EDF5", floor: "#8A6446", spot: [2.3, 0, 0.2] },
+  "aws-sbg": { Room: Aws, wall: "#F5EBDD", floor: "#9C7B57", spot: [-0.9, 0, 0.6] },
+  "vector-institute": { Room: Vector, wall: "#DCE3EA", floor: "#56606B", spot: [-0.2, 0, 0.1] },
+  mali: { Room: Mali, wall: "#EFE2D6", floor: "#8C7A66", spot: [0.6, 0, 0.3] },
+  "yu-blueprint": { Room: Blueprint, wall: "#E4ECF6", floor: "#C9B79C", spot: [-0.6, 0, 1.0] },
+  "itreb-canada": { Room: Itreb, wall: "#E6EEED", floor: "#8A6446", spot: [1.3, 0, 0.3] },
+  "vex-robotics": { Room: VexWorkshop, wall: "#EDEDED", floor: "#4A4F57", spot: [-0.6, 0, 0.9] },
+  "prince-aly-khan-hospital": { Room: Hospital, wall: "#E8F5F2", floor: "#DCE7E4", spot: [0.6, 0, 0.5] },
+  aiesec: { Room: Aiesec, wall: "#E5EEF8", floor: "#B8865B", spot: [1.0, 0, -0.5] },
+};
+
+const floors: FloorDef[] = EXPERIENCE_FLOORS.map((meta) => {
+  const r = ROOM_FOR[meta.id];
+  return { meta, wall: r.wall, floor: r.floor, Room: r.Room, spot: { pos: r.spot, yaw: 0, pose: "idle" } };
+});
 
 export function ExperienceInterior() {
   return <Tower building="experience" floors={floors} w={W} d={D} fh={H} outer="cream" />;

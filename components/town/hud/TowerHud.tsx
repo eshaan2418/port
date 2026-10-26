@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
-import { Brain, Cloud, DoorOpen, GraduationCap, Mailbox, Medal, Snowflake, Swords, type LucideIcon } from "lucide-react";
+import { Brain, Cloud, DoorOpen, Mailbox, Medal, Snowflake, Swords, type LucideIcon } from "lucide-react";
 import { projects, type Project } from "@/data/projects";
 import { education } from "@/data/education";
 import { site, mailto } from "@/data/site";
@@ -125,12 +125,12 @@ function FloorChip({ tower, i, current }: { tower: TowerId; i: number; current: 
     const f = EXPERIENCE_FLOORS[i];
     return (
       <>
-        <LogoMark src={f.logo!} alt={`${f.label} logo`} size={18} />
+        <LogoMark src={f.logo!} alt={`${f.exp.org} logo`} size={18} />
         <span className="min-w-0 leading-tight">
           <span className="block truncate text-[0.74rem] font-medium md:text-[0.8rem]">{f.label}</span>
           <span className={`hidden truncate text-[0.66rem] md:block ${muted}`}>{f.sub}</span>
         </span>
-        <span className={`ml-auto hidden pl-1 font-mono text-[0.62rem] md:inline ${muted}`}>{f.year}</span>
+        <span className={`ml-auto hidden shrink-0 pl-1 font-mono text-[0.58rem] whitespace-nowrap md:inline ${muted}`}>{f.dates}</span>
       </>
     );
   }
@@ -145,10 +145,9 @@ function FloorChip({ tower, i, current }: { tower: TowerId; i: number; current: 
     );
   }
   const f = EDUCATION_FLOORS[i];
-  const Icon = f.id === "contact" ? Mailbox : GraduationCap;
   return (
     <>
-      <Icon size={15} strokeWidth={1.7} aria-hidden="true" />
+      {f.id === "contact" ? <Mailbox size={15} strokeWidth={1.7} aria-hidden="true" /> : <LogoMark src={education.logo} alt={`${education.school} logo`} size={16} />}
       <span className="text-[0.74rem] whitespace-nowrap md:text-[0.82rem]">{f.label}</span>
     </>
   );
@@ -185,30 +184,25 @@ function Fold({ head, children, id }: { head: ReactNode; children: ReactNode; id
 function ExperiencePlaque({ i }: { i: number }) {
   const f = EXPERIENCE_FLOORS[i];
   const e = f.exp;
+  // only the fields from data/experiences.ts: logo, role, company, dates, the one line, and Vector's paper link
   return (
-    <Fold
-      id={f.id}
-      head={
-        <div className="flex items-center gap-3">
-          <LogoMark src={e.logo} alt={`${e.company} logo`} size={30} />
-          <div className="min-w-0">
-            <p className="micro-label text-[0.58rem] text-muted">
-              <span className="font-mono">{e.year}</span>
-            </p>
-            <p className="font-display text-[1.3rem] leading-tight">{e.company}</p>
-            <p className="text-[0.8rem] text-ink/75">{e.role}</p>
-          </div>
+    <div className={`${card} px-4 py-3 md:p-5`}>
+      <div className="flex items-center gap-3">
+        <LogoMark src={e.logo} alt={`${e.org} logo`} size={30} />
+        <div className="min-w-0">
+          <p className="font-display text-[1.25rem] leading-tight">{e.role}</p>
+          <p className="text-[0.82rem] text-ink/80">{e.company}</p>
+          <p className="font-mono text-[0.68rem] text-muted">{e.dates}</p>
         </div>
-      }
-    >
-      <p className="mt-3 text-[0.84rem] leading-relaxed text-ink/85">{e.summary}</p>
+      </div>
+      {e.line && <p className="mt-3 text-[0.88rem] leading-relaxed text-ink/85">{e.line}</p>}
       {e.link && (
         <a href={e.link.href} target="_blank" rel="noopener noreferrer" className={`${linkCls} mt-3`}>
           {e.link.label}
           <span className="sr-only"> (opens in a new tab)</span>
         </a>
       )}
-    </Fold>
+    </div>
   );
 }
 
@@ -218,14 +212,14 @@ function ProjectsPlaque() {
   const item = useTown((s) => s.item);
   const setItem = useTown((s) => s.setItem);
   const picked = projects.find((p) => p.slug === item);
-  // phones: the 22 names fold away (so the hall stays visible); desktop always shows them
+  // phones: the list of names folds away (so the hall stays visible); desktop always shows them
   const [browse, setBrowse] = useState(false);
   return (
     <div className={`${card} max-h-[44vh] overflow-y-auto px-4 py-3 md:max-h-[calc(100vh-9rem)] md:p-5`}>
       <div className="flex items-baseline justify-between gap-3">
         <div>
           <p className="micro-label text-[0.58rem] text-muted">projects gallery</p>
-          <p className="font-display text-[1.25rem] leading-tight lowercase">{projects.length} projects</p>
+          <p className="font-display text-[1.25rem] leading-tight lowercase">every project</p>
         </div>
         <button
           type="button"
@@ -251,7 +245,6 @@ function ProjectsPlaque() {
                 p.slug === item ? "border-ink bg-ink text-cream" : "border-ink/20 hover:bg-ink/10"
               }`}
             >
-              {p.featured && <span aria-hidden="true">★ </span>}
               {p.name}
             </button>
           </li>
@@ -364,10 +357,13 @@ function EducationPlaque({ i }: { i: number }) {
     <Fold
       id={f.id}
       head={
-        <div>
-          <p className="micro-label text-[0.58rem] text-muted">education</p>
-          <p className="font-display text-[1.45rem] leading-tight lowercase">york university</p>
-          <p className="text-[0.82rem] text-ink/75">Lassonde School of Engineering</p>
+        <div className="flex items-center gap-3">
+          <LogoMark src={education.logo} alt={`${education.school} logo`} size={30} />
+          <div>
+            <p className="micro-label text-[0.58rem] text-muted">education</p>
+            <p className="font-display text-[1.45rem] leading-tight lowercase">{education.school.toLowerCase()}</p>
+            <p className="text-[0.82rem] text-ink/75">{education.faculty}</p>
+          </div>
         </div>
       }
     >

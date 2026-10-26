@@ -65,9 +65,7 @@ const TOUCH: { keys: React.ReactNode; label: string }[] = [
 
 /**
  * "How to move around": opens right after every intro, and whenever "?" is
- * pressed. Enter / Esc / the button close it; that's the visitor's first
- * interaction, so it also unlocks audio (which then follows the sound toggle,
- * off by default).
+ * pressed. Enter / Esc / the button close it.
  */
 export function StartCard({ touch }: { touch: boolean }) {
   const open = useTown((s) => s.startOpen);
@@ -75,7 +73,7 @@ export function StartCard({ touch }: { touch: boolean }) {
   const button = useRef<HTMLButtonElement>(null);
   const start = () => {
     close();
-    void cityAudio.start(); // first user gesture: prepare audio (still muted)
+    void cityAudio.start(); // (a gesture: harmless if audio is already running)
   };
 
 

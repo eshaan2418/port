@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { isDayTime, torontoHours } from "@/lib/time";
+import { isDayTime, clockHours } from "@/lib/time";
 import type { BuildingId } from "./world/layout";
 import type { HomeRoom } from "@/lib/schedule";
 
@@ -27,7 +27,7 @@ function startHour() {
   if (typeof window === "undefined") return 12;
   const forced = (window as unknown as { __forceHour?: number }).__forceHour;
   if (process.env.NODE_ENV !== "production" && typeof forced === "number") return forced;
-  return torontoHours(); // always real Toronto time on load
+  return clockHours(); // always the real local time (TIME_ZONE) on load
 }
 
 type TownState = {
@@ -53,8 +53,8 @@ type TownState = {
   toast: string | null;
 
   /**
-   * Simulated Toronto clock, fractional hours (0–24). Everything lighting- and
-   * routine-related derives from this one value. It starts at the real Toronto
+   * Simulated clock (lib/time TIME_ZONE), fractional hours (0–24). Everything lighting- and
+   * routine-related derives from this one value. It starts at the real
    * time and ticks in real time; the day/night toggle snaps it to noon or
    * midnight (milestone 2 adds a full scrubber on top).
    */
@@ -81,6 +81,8 @@ type TownState = {
   /** speech bubble: text + a key so the same line can replay */
   speech: { text: string; key: number } | null;
   sound: boolean;
+  /** the visitor pressed M (silent mute shortcut; there's no sound button) */
+  muted: boolean;
   volume: number; // 0..1
 
   setMode: (mode: ViewMode, reason?: string | null) => void;
@@ -138,7 +140,8 @@ export const useTown = create<TownState>((set, get) => ({
   exclaim: 0,
   doorOpen: false,
   speech: null,
-  sound: false,
+  sound: false, // on once free roam is picked (that click starts the audio); M mutes
+  muted: false,
   volume: 0.6,
 
   setMode: (mode, reason = null) => set({ mode, listReason: reason }),
@@ -168,7 +171,7 @@ export const useTown = create<TownState>((set, get) => ({
   setExclaim: () => set({ exclaim: performance.now() }),
   setDoorOpen: (open) => set({ doorOpen: open }),
   say: (text) => set({ speech: text ? { text, key: performance.now() } : null }),
-  toggleSound: () => set({ sound: !get().sound }),
+  toggleSound: () => set({ sound: !get().sound, muted: get().sound }),
   setVolume: (v) => set({ volume: Math.min(1, Math.max(0, v)), sound: v > 0 ? get().sound : false }),
 }));
 

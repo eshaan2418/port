@@ -14,7 +14,7 @@ import { BOARD_FONTS, STREET_FONT } from "../../scene/Buildings";
 /**
  * Projects Gallery: one hall with every project, hung salon-style in three
  * rows on the back wall, in the fixed order from data/projects.ts (read left
- * to right, top to bottom; the featured four are wider). Each frame is a
+ * to right, top to bottom; every frame the same size). Each frame is a
  * typographic panel: the name in the gallery's board font, the tech tags,
  * and an orange or Tiffany border. (If a real /public/projects/<slug>.webp
  * is ever added it's shown instead; otherwise there's no image at all.)
@@ -30,7 +30,7 @@ const BACK = -D / 2;
 const LEFT = -W / 2 + 2.25;
 const ROW_Y = [3.15, 2.08, 1.01];
 const FRAME_H = 0.82;
-const GAP = 0.3;
+const GAP = 0.26;
 const ACCENT = { orange: "#F37021", tiffany: "#81D8D0" } as const;
 
 type Slot = { p: Project; x: number; y: number; w: number; h: number };
@@ -38,8 +38,8 @@ type Slot = { p: Project; x: number; y: number; w: number; h: number };
 /** fill the rows in order (as many as fit), each row centred on the wall */
 function layout(): Slot[] {
   const rows: Project[][] = [[], [], []];
-  const width = (p: Project) => (p.featured ? 1.8 : 1.25);
-  const rowWidth = (r: Project[]) => r.reduce((a, p) => a + width(p), 0) + GAP * Math.max(0, r.length - 1);
+  const width = () => 1.18; // all frames equal
+  const rowWidth = (r: Project[]) => r.reduce((a) => a + width(), 0) + GAP * Math.max(0, r.length - 1);
   let r = 0;
   for (const p of projects) {
     if (rows[r].length && rowWidth([...rows[r], p]) > ROW_W && r < rows.length - 1) r++;
@@ -49,7 +49,7 @@ function layout(): Slot[] {
   rows.forEach((row, ri) => {
     let x = LEFT + (ROW_W - rowWidth(row)) / 2;
     for (const p of row) {
-      const w = width(p);
+      const w = width();
       out.push({ p, x: x + w / 2, y: ROW_Y[ri], w, h: FRAME_H });
       x += w + GAP;
     }
@@ -138,11 +138,6 @@ function Frame({ s, active }: { s: Slot; active: boolean }) {
           <Text font={STREET_FONT} fontSize={0.075} color={accent} anchorX="left" anchorY="middle" position={[-s.w / 2 + 0.1, -s.h / 2 + 0.13, 0.04]} maxWidth={s.w - 0.2}>
             {tags}
           </Text>
-          {s.p.featured && (
-            <Text font={STREET_FONT} fontSize={0.06} color={accent} anchorX="right" anchorY="middle" position={[s.w / 2 - 0.1, s.h / 2 - 0.1, 0.04]}>
-              FEATURED
-            </Text>
-          )}
         </>
       )}
     </group>

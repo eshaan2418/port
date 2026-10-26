@@ -4,7 +4,7 @@ import { PersonJsonLd } from "@/components/JsonLd";
 
 export const metadata: Metadata = {
   title: "Agent version",
-  description: "Eshaan Kapooswalla's portfolio as clean, structured, machine-readable HTML.",
+  description: "Eshaan Kapooswalla's portfolio.",
 };
 
 /**
@@ -30,9 +30,7 @@ export default function AgentPage() {
         </p>
         {/* eslint-enable @next/next/no-html-link-for-pages */}
         <h1 className="mt-6 text-[1.9rem] font-semibold leading-tight">{d.name}</h1>
-        <p className="mt-1">
-          {d.tagline} · {d.location}
-        </p>
+        <p className="mt-1">{d.subtitle}</p>
         <ul className="mt-4 space-y-0.5" aria-label="Contact">
           <li>
             email: <a className={a} href={`mailto:${d.contact.email}`}>{d.contact.email}</a>
@@ -66,11 +64,12 @@ export default function AgentPage() {
           <ol className="mt-4 space-y-5">
             {d.experience.map((e) => (
               <li key={e.company}>
-                <article aria-labelledby={`exp-${e.company}`} className="border-l-2 border-tiffany/50 pl-4">
-                  <h3 id={`exp-${e.company}`} className="font-semibold">
-                    {e.company} · {e.role} · <time dateTime={String(e.year)}>{e.year}</time>
+                <article aria-label={`${e.role} @ ${e.company}`} className="border-l-2 border-tiffany/50 pl-4">
+                  <h3 className="font-semibold">
+                    {e.role} @ {e.company}
                   </h3>
-                  <p className="mt-1">{e.summary}</p>
+                  <p>{e.dates}</p>
+                  {"line" in e && e.line && <p className="mt-1">{e.line}</p>}
                   {"link" in e && e.link && (
                     <p className="mt-1">
                       {e.link.label}: <a className={a} href={e.link.url}>{e.link.url}</a>
@@ -84,16 +83,13 @@ export default function AgentPage() {
 
         <section aria-labelledby="agent-projects" className="border-b border-tiffany/30 py-8">
           <h2 id="agent-projects" className="text-[1.25rem] font-semibold">
-            projects <span className="font-normal">({d.projects.length})</span>
+            projects
           </h2>
           <ol className="mt-4 space-y-5">
             {d.projects.map((p) => (
               <li key={p.name}>
-                <article aria-labelledby={`proj-${p.name}`} className="border-l-2 border-tiffany/50 pl-4">
-                  <h3 id={`proj-${p.name}`} className="font-semibold">
-                    {p.name}
-                    {p.featured && <span className="font-normal"> · featured</span>}
-                  </h3>
+                <article aria-label={p.name} className="border-l-2 border-tiffany/50 pl-4">
+                  <h3 className="font-semibold">{p.name}</h3>
                   <p className="mt-1">{p.description}</p>
                   <p className="mt-1">tags: {p.tags.length ? p.tags.join(", ") : "none listed"}</p>
                   <p>

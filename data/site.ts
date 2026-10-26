@@ -1,7 +1,7 @@
 export const site = {
   name: "Eshaan Kapooswalla",
-  location: "Toronto, ON, CA",
-  tagline: "engineering + community builder",
+  /** shown under the name (from the education entry) */
+  subtitle: "CS @ York University",
   email: "eshaank@my.yorku.ca",
   linkedin: "https://www.linkedin.com/in/eshaankap/",
   github: "https://github.com/eshaan2418",

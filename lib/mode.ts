@@ -1,22 +1,7 @@
-/** "remember my choice" from the mode chooser (localStorage). Mirrored by the pre-paint script in app/layout.tsx. */
-export type SavedMode = "town" | "list" | "agent";
-const KEY = "site-mode";
+export type Mode = "town" | "list" | "agent";
 
-export function readSavedMode(): SavedMode | null {
-  try {
-    const v = localStorage.getItem(KEY);
-    return v === "town" || v === "list" || v === "agent" ? v : null;
-  } catch {
-    return null;
-  }
-}
-
-export function saveMode(mode: SavedMode | null) {
-  try {
-    if (mode) localStorage.setItem(KEY, mode);
-    else localStorage.removeItem(KEY);
-  } catch {}
-}
+/** an older build saved the chooser pick here; it's cleared on every load so the chooser always shows */
+export const LEGACY_MODE_KEY = "site-mode";
 
 /** touch-first or modest hardware: free roam still works, but say it's best on a laptop */
 export function lowPowerDevice() {

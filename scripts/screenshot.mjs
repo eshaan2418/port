@@ -2,7 +2,7 @@
 // usage: node scripts/screenshot.mjs <name> <width> <height> [shot ...]
 //   shot = "x,z,playerYaw,camYaw,camPitch,camDist"  (any field may be left empty)
 // env: URL (default http://localhost:3000), SHOTS_DIR, START=1 keeps the start card open, GPU=1 (real GPU via Chrome/Metal), SETTLE ms,
-//      TIME=<hours> sets the Toronto clock (e.g. TIME=0 for night), POV=1 first person,
+//      TIME=<hours> sets the clock (e.g. TIME=0 for night), POV=1 first person,
 //      HOME_ROOM=<room|follow> goes inside Home, ENTER=<tower> FLOOR=<i> ITEM=<slug> ARRIVE=<ms> goes inside a tower,
 //      INTRO=1 plays the intro instead of skipping it (TIME is then forced from the first frame), and
 //      CUES="hold:1.6,notice:0.5,speak:3,walk:1.2,out:1.9,wave:0.7,swing:1.2,end,free" captures at

@@ -1,16 +1,9 @@
 /**
- * Single source of truth for experience content.
- * Order here is the display order everywhere (newest first): hero list,
- * 3D ribbon path, mobile stack and the reduced-motion list.
+ * Single source of truth for experience content: the normal website, the
+ * 3D Experience Tower (one room each, top to bottom), the agent view and its
+ * .md / .json / llms.txt files all read this. Array order is the display
+ * order everywhere. Every string here is exactly as given; don't add to it.
  */
-
-export type ExperienceType =
-  | "internship"
-  | "research"
-  | "community"
-  | "founding"
-  | "developer"
-  | "leadership";
 
 export type ExperienceLink = {
   label: string;
@@ -19,14 +12,15 @@ export type ExperienceLink = {
 
 export type Experience = {
   id: string;
-  year: number;
-  company: string;
-  /** Short label used everywhere (hero list, 3D cards, indexes). Do not expand. */
+  /** role title, e.g. "Member of Technical Staff" */
   role: string;
-  /** Body text on the 3D gift-tag card. */
-  summary: string;
-  location: string;
-  type: ExperienceType;
+  /** company as shown, including " · Internship" where it applies */
+  company: string;
+  /** company name alone (logos, alt text, "Role @ Company") */
+  org: string;
+  dates: string;
+  /** the one short line (none for AIESEC) */
+  line?: string;
   /** Path under /public. Replace the file to swap a logo; no code change needed. */
   logo: string;
   link?: ExperienceLink;
@@ -35,45 +29,56 @@ export type Experience = {
 export const experiences: Experience[] = [
   {
     id: "cohere",
-    year: 2027,
-    company: "Cohere",
     role: "Member of Technical Staff",
-    summary:
-      "Forward Deployed Engineer internship, Toronto. Incoming Winter 2027.",
-    location: "Toronto",
-    type: "internship",
+    company: "Cohere · Internship",
+    org: "Cohere",
+    dates: "Jun 2026 – Present",
+    line: "north models. ( incoming winter'27 )",
     logo: "/logos/cohere.png",
   },
   {
     id: "wealthsimple",
-    year: 2026,
-    company: "Wealthsimple",
     role: "Engineering",
-    summary: "Internship, Toronto. Incoming Fall 2026.",
-    location: "Toronto",
-    type: "internship",
+    company: "Wealthsimple · Internship",
+    org: "Wealthsimple",
+    dates: "Sep 2026 – Present",
+    line: "financial markets.",
     logo: "/logos/wealthsimple.jpeg",
   },
   {
     id: "shopify",
-    year: 2026,
-    company: "Shopify",
     role: "Engineering",
-    summary:
-      "Machine Learning Engineer internship, Toronto. User Recommendations team: improving search relevance and recommendation accuracy for large-scale product discovery. Search Relevance team: building production systems in C++ and Python to optimize ranking and retrieval pipelines.",
-    location: "Toronto",
-    type: "internship",
+    company: "Shopify · Internship",
+    org: "Shopify",
+    dates: "May 2026 – Aug 2026",
+    line: "sidekick, recommendations & search relevance (received return offer)",
     logo: "/logos/shopify.svg",
   },
   {
+    id: "york-ta",
+    role: "Teaching Assistant",
+    company: "York University",
+    org: "York University",
+    dates: "May 2026 – Aug 2026",
+    line: "eecs 1021",
+    logo: "/logos/york.png",
+  },
+  {
+    id: "aws-sbg",
+    role: "Student Builder Group Leader",
+    company: "Amazon Web Services (AWS)",
+    org: "Amazon Web Services (AWS)",
+    dates: "Nov 2025 – May 2026",
+    line: "founded a 200+ member community.",
+    logo: "/logos/aws-sbg.svg",
+  },
+  {
     id: "vector-institute",
-    year: 2026,
-    company: "Vector Institute",
     role: "Researcher",
-    summary:
-      "Machine Learning Researcher (volunteer), Toronto. Developed SAGE-KV, an entropy-calibrated sparse attention mechanism that reduced Transformer decode latency by dynamically routing queries to local, global, and semantic KV-cache pages while minimizing unnecessary GPU memory reads. Designed a Python/C++/CUDA prototype and benchmarking framework comparing sparse attention against dense, sliding-window, static sparse, and FlashAttention-style baselines (p50/p90/p99 latency, fallback rate, bandwidth, retrieval quality).",
-    location: "Toronto",
-    type: "research",
+    company: "Vector Institute",
+    org: "Vector Institute",
+    dates: "Jan 2026 – Apr 2026",
+    line: "authored a paper on inference.",
     logo: "/logos/vector-institute.jpeg",
     link: {
       label: "View research paper →",
@@ -81,73 +86,57 @@ export const experiences: Experience[] = [
     },
   },
   {
-    id: "aws-sbg",
-    year: 2025,
-    company: "Amazon Web Services (SBG)",
-    role: "Founder & Captain",
-    summary:
-      "Founded and scaled a 200+ member cloud engineering community (AWS Student Builder Groups, prev. Cloud Club, at York University). Led hands-on AWS workshops and built a strong builder culture on campus.",
-    location: "York University, Toronto",
-    type: "community",
-    logo: "/logos/aws-sbg.svg",
-    link: {
-      label: "awsyorkucloud.com →",
-      href: "https://awsyorkucloud.com/",
-    },
-  },
-  {
     id: "mali",
-    year: 2025,
-    company: "Mali",
     role: "Founding Engineer",
-    summary:
-      "Founding Machine Learning Software Engineer, remote. Built and deployed PyTorch-based ML pipelines. Worked on distributed training and model optimization workflows.",
-    location: "Remote",
-    type: "founding",
+    company: "Mali",
+    org: "Mali",
+    dates: "May 2025 – Dec 2025",
+    line: "backed by ibm, 5-figure exit.",
     logo: "/logos/mali.svg",
   },
   {
     id: "yu-blueprint",
-    year: 2025,
-    company: "YU Blueprint",
     role: "Engineering",
-    summary:
-      "Machine Learning Software Developer, Toronto. Developing ML-driven applications for nonprofit organizations. Contributing to scalable full-stack systems using React and Django.",
-    location: "Toronto",
-    type: "developer",
+    company: "YU Blueprint",
+    org: "YU Blueprint",
+    dates: "May 2025 – Aug 2025",
+    line: "university club, made friends & built projects.",
     logo: "/logos/yu-blueprint.png",
   },
   {
     id: "itreb-canada",
-    year: 2024,
-    company: "ITREB Canada",
     role: "Engineering",
-    summary:
-      "Software Engineer internship, Toronto (hybrid). Built Spring Boot microservices and secure REST APIs. Improved system architecture and frontend/backend integration.",
-    location: "Toronto (hybrid)",
-    type: "internship",
+    company: "ITREB Canada · Internship",
+    org: "ITREB Canada",
+    dates: "May 2024 – Dec 2024",
+    line: "built software used by thousands of community members.",
     logo: "/logos/itreb-canada.jpeg",
   },
   {
+    id: "vex-robotics",
+    role: "Bot Programmer",
+    company: "VEX Robotics",
+    org: "VEX Robotics",
+    dates: "Jan 2022 – May 2024",
+    line: "built some cool bots, using c++.",
+    logo: "/logos/vex-robotics.svg",
+  },
+  {
     id: "prince-aly-khan-hospital",
-    year: 2023,
-    company: "Prince Aly Khan Hospital",
     role: "Engineering",
-    summary:
-      "Software Engineer internship, remote. Developed secure healthcare workflow solutions. Built responsive React interfaces with strong data compliance.",
-    location: "Remote",
-    type: "internship",
+    company: "Prince Aly Khan Hospital · Internship",
+    org: "Prince Aly Khan Hospital",
+    dates: "Jan 2024 – Apr 2024",
+    line: "built tools that helped hospital teams manage information and support day-to-day medical work.",
     logo: "/logos/prince-aly-khan-hospital.svg",
   },
   {
+    // not in the latest source: title, company and year only
     id: "aiesec",
-    year: 2023,
-    company: "AIESEC",
     role: "VP of Technology",
-    summary:
-      "Vice President of Technology, remote. Led technical initiatives supporting global exchange programs. Contributed to web systems and event infrastructure.",
-    location: "Remote",
-    type: "leadership",
+    company: "AIESEC",
+    org: "AIESEC",
+    dates: "2023",
     logo: "/logos/aiesec.jpeg",
   },
 ];

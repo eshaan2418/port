@@ -24,8 +24,7 @@ const mono = IBM_Plex_Mono({
   display: "swap",
 });
 
-const description =
-  "Eshaan Kapooswalla: engineering + community builder in Toronto. Machine learning, distributed systems, and the communities around them.";
+const description = "Eshaan Kapooswalla's portfolio.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -35,7 +34,7 @@ export const metadata: Metadata = {
         : "http://localhost:3000"),
   ),
   title: {
-    default: `${site.name} · engineering + community builder`,
+    default: site.name,
     template: `%s · ${site.name}`,
   },
   description,
@@ -45,7 +44,6 @@ export const metadata: Metadata = {
     title: site.name,
     description,
     siteName: site.name,
-    locale: "en_CA",
   },
   twitter: { card: "summary_large_image", title: site.name, description },
   // the machine-readable versions (see lib/agent.ts)
@@ -73,11 +71,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <head>
-        {/* before first paint, on / only: honour ?view= / "remember my choice" (and reduced motion), so the
-            chooser, the list or the city's cover shows straight away with nothing jumping into place */}
+        {/* before first paint, on / only: honour ?view= (and reduced motion), so the chooser, the list or the
+            city's cover shows straight away with nothing jumping into place; also clears the old saved pick */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(location.pathname!=="/")return;var q=new URLSearchParams(location.search),v=q.get("view"),c=q.has("choose"),s=null,d=document.documentElement.dataset;try{s=localStorage.getItem("site-mode")}catch(e){}if(c)return;if(v==="agent"||(!v&&s==="agent")){location.replace("/agent/");return}if(v==="list"||(!v&&s==="list")||(!v&&!s&&matchMedia("(prefers-reduced-motion: reduce)").matches))d.initialView="list";else if(v==="city"||(!v&&s==="town"))d.initialView="city"}catch(e){}})()`,
+            __html: `(function(){try{try{localStorage.removeItem("site-mode")}catch(e){}if(location.pathname!=="/")return;var q=new URLSearchParams(location.search),v=q.get("view"),d=document.documentElement.dataset;if(q.has("choose"))return;if(v==="agent"){location.replace("/agent/");return}if(v==="list"||(!v&&matchMedia("(prefers-reduced-motion: reduce)").matches))d.initialView="list";else if(v==="city")d.initialView="city"}catch(e){}})()`,
           }}
         />
       </head>

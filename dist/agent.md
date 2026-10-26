@@ -1,6 +1,6 @@
 # Eshaan Kapooswalla
 
-engineering + community builder · Toronto, ON, CA
+CS @ York University
 
 - Email: eshaank@my.yorku.ca
 - LinkedIn: https://www.linkedin.com/in/eshaankap/
@@ -10,49 +10,53 @@ engineering + community builder · Toronto, ON, CA
 
 Newest first.
 
-### Cohere · Member of Technical Staff (2027)
+### Member of Technical Staff @ Cohere · Internship (Jun 2026 – Present)
 
-Forward Deployed Engineer internship, Toronto. Incoming Winter 2027.
+north models. ( incoming winter'27 )
 
-### Wealthsimple · Engineering (2026)
+### Engineering @ Wealthsimple · Internship (Sep 2026 – Present)
 
-Internship, Toronto. Incoming Fall 2026.
+financial markets.
 
-### Shopify · Engineering (2026)
+### Engineering @ Shopify · Internship (May 2026 – Aug 2026)
 
-Machine Learning Engineer internship, Toronto. User Recommendations team: improving search relevance and recommendation accuracy for large-scale product discovery. Search Relevance team: building production systems in C++ and Python to optimize ranking and retrieval pipelines.
+sidekick, recommendations & search relevance (received return offer)
 
-### Vector Institute · Researcher (2026)
+### Teaching Assistant @ York University (May 2026 – Aug 2026)
 
-Machine Learning Researcher (volunteer), Toronto. Developed SAGE-KV, an entropy-calibrated sparse attention mechanism that reduced Transformer decode latency by dynamically routing queries to local, global, and semantic KV-cache pages while minimizing unnecessary GPU memory reads. Designed a Python/C++/CUDA prototype and benchmarking framework comparing sparse attention against dense, sliding-window, static sparse, and FlashAttention-style baselines (p50/p90/p99 latency, fallback rate, bandwidth, retrieval quality).
+eecs 1021
+
+### Student Builder Group Leader @ Amazon Web Services (AWS) (Nov 2025 – May 2026)
+
+founded a 200+ member community.
+
+### Researcher @ Vector Institute (Jan 2026 – Apr 2026)
+
+authored a paper on inference.
 
 - View research paper: https://drive.google.com/file/d/1vsVoP_sBgLqXQblE80stIUYyOGJpyLm8/view
 
-### Amazon Web Services (SBG) · Founder & Captain (2025)
+### Founding Engineer @ Mali (May 2025 – Dec 2025)
 
-Founded and scaled a 200+ member cloud engineering community (AWS Student Builder Groups, prev. Cloud Club, at York University). Led hands-on AWS workshops and built a strong builder culture on campus.
+backed by ibm, 5-figure exit.
 
-- awsyorkucloud.com: https://awsyorkucloud.com/
+### Engineering @ YU Blueprint (May 2025 – Aug 2025)
 
-### Mali · Founding Engineer (2025)
+university club, made friends & built projects.
 
-Founding Machine Learning Software Engineer, remote. Built and deployed PyTorch-based ML pipelines. Worked on distributed training and model optimization workflows.
+### Engineering @ ITREB Canada · Internship (May 2024 – Dec 2024)
 
-### YU Blueprint · Engineering (2025)
+built software used by thousands of community members.
 
-Machine Learning Software Developer, Toronto. Developing ML-driven applications for nonprofit organizations. Contributing to scalable full-stack systems using React and Django.
+### Bot Programmer @ VEX Robotics (Jan 2022 – May 2024)
 
-### ITREB Canada · Engineering (2024)
+built some cool bots, using c++.
 
-Software Engineer internship, Toronto (hybrid). Built Spring Boot microservices and secure REST APIs. Improved system architecture and frontend/backend integration.
+### Engineering @ Prince Aly Khan Hospital · Internship (Jan 2024 – Apr 2024)
 
-### Prince Aly Khan Hospital · Engineering (2023)
+built tools that helped hospital teams manage information and support day-to-day medical work.
 
-Software Engineer internship, remote. Developed secure healthcare workflow solutions. Built responsive React interfaces with strong data compliance.
-
-### AIESEC · VP of Technology (2023)
-
-Vice President of Technology, remote. Led technical initiatives supporting global exchange programs. Contributed to web systems and event infrastructure.
+### VP of Technology @ AIESEC (2023)
 
 ## Projects
 
@@ -91,28 +95,28 @@ AI agent workflows with durable DAG scheduling, Python workers, Kafka, PostgreSQ
 - Tags: Go
 - GitHub: https://github.com/eshaan2418/agentflow
 
-### FinanceSimple (featured)
+### FinanceSimple
 
 Full-stack fintech platform for tracking net worth, spending, debts, investments, crypto, real estate, and sandbox paper trading, with secure authentication, Row Level Security, financial analytics, report generation, and a polished dashboard.
 
 - Tags: React, Spring Boot, Gemini, PostgreSQL
 - GitHub: https://github.com/eshaan2418/FinanceSimple
 
-### DistData (featured)
+### DistData
 
 Fault-tolerant distributed database with consensus and transaction logic.
 
 - Tags: C++
 - GitHub: https://github.com/eshaan2418/DIstData
 
-### EshaanOS (featured)
+### EshaanOS
 
 Educational operating system simulator exploring scheduling and memory management.
 
 - Tags: C++
 - GitHub: https://github.com/eshaan2418/EshaanOS
 
-### Jobber (featured)
+### Jobber
 
 Microservices job portal built with Spring Boot and React.
 
@@ -223,6 +227,5 @@ Algorithmic trading experiments.
 York University, Lassonde School of Engineering
 
 - Degree: B.Sc (Hons) Computer Science
-- Location: Toronto, ON, Canada
 - Scholarship: Tentanda Via Scholar ($120,000)
 - Honours: Dean's Honor Roll

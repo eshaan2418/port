@@ -25,18 +25,16 @@ export const MACHINE_FILES = [
 export function agentData() {
   return {
     name: site.name,
-    tagline: site.tagline,
-    location: site.location,
+    subtitle: site.subtitle,
     contact: { email: site.email, linkedin: site.linkedin, github: site.github },
     experience: experiences.map((e) => ({
-      company: e.company,
       role: e.role,
-      year: e.year,
-      location: e.location,
-      summary: e.summary,
+      company: e.company,
+      dates: e.dates,
+      ...(e.line ? { line: e.line } : {}),
       ...(e.link ? { link: { label: e.link.label.replace(/\s*→\s*$/, ""), url: e.link.href } } : {}),
     })),
-    projects: projects.map((p) => ({ name: p.name, description: p.description, tags: p.tags, github: p.repoUrl, featured: p.featured })),
+    projects: projects.map((p) => ({ name: p.name, description: p.description, tags: p.tags, github: p.repoUrl })),
     extracurriculars: extracurriculars.map((x) => ({ name: x.label, facts: x.facts, ...(x.link ? { link: x.link } : {}) })),
     education: {
       school: education.school,
@@ -49,17 +47,18 @@ export function agentData() {
 export function agentMarkdown() {
   const d = agentData();
   const out: string[] = [];
-  out.push(`# ${d.name}`, "", `${d.tagline} · ${d.location}`, "");
+  out.push(`# ${d.name}`, "", d.subtitle, "");
   out.push(`- Email: ${d.contact.email}`, `- LinkedIn: ${d.contact.linkedin}`, `- GitHub: ${d.contact.github}`, "");
   out.push("## Experience", "", "Newest first.", "");
   for (const e of d.experience) {
-    out.push(`### ${e.company} · ${e.role} (${e.year})`, "", e.summary);
+    out.push(`### ${e.role} @ ${e.company} (${e.dates})`);
+    if ("line" in e && e.line) out.push("", e.line);
     if ("link" in e && e.link) out.push("", `- ${e.link.label}: ${e.link.url}`);
     out.push("");
   }
   out.push("## Projects", "");
   for (const p of d.projects) {
-    out.push(`### ${p.name}${p.featured ? " (featured)" : ""}`, "", p.description, "", `- Tags: ${p.tags.join(", ") || "none listed"}`, `- GitHub: ${p.github}`, "");
+    out.push(`### ${p.name}`, "", p.description, "", `- Tags: ${p.tags.join(", ") || "none listed"}`, `- GitHub: ${p.github}`, "");
   }
   out.push("## Extracurriculars", "");
   for (const x of d.extracurriculars) {
@@ -76,7 +75,7 @@ export function llmsTxt() {
   return [
     `# ${d.name}`,
     "",
-    `> ${d.tagline}, ${d.location}. Portfolio: experience, projects, extracurriculars and education.`,
+    `> ${d.name}'s portfolio: experience, projects, extracurriculars and education.`,
     "",
     "## Machine-readable versions",
     "",
@@ -96,16 +95,14 @@ export function llmsTxt() {
   ].join("\n");
 }
 
-/** schema.org Person (only facts from /data) */
+/** schema.org Person (only facts from /data; no location, no job title) */
 export function personJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "Person",
     name: site.name,
-    description: site.tagline,
     email: `mailto:${site.email}`,
     ...(siteUrl ? { url: `${siteUrl}/` } : {}),
-    address: { "@type": "PostalAddress", addressLocality: "Toronto", addressRegion: "ON", addressCountry: "CA" },
     affiliation: { "@type": "CollegeOrUniversity", name: education.school, department: { "@type": "Organization", name: education.faculty } },
     sameAs: [site.linkedin, site.github],
   };

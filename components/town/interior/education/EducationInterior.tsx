@@ -7,7 +7,8 @@ import * as THREE from "three";
 import { runtime } from "../../state";
 import { EDUCATION_FLOORS } from "../floors";
 import { Tower, type ActorFrame, type FloorDef, type RoomProps } from "../Tower";
-import { Box, Cyl, Desk, Plant, Rug, Shelf, Window, mat, type V3 } from "../kit";
+import { Box, Cyl, Desk, LogoPlaque, Plant, Rug, Shelf, Window, mat, type V3 } from "../kit";
+import { education } from "@/data/education";
 import { BOARD_FONTS, STREET_FONT } from "../../scene/Buildings";
 
 /**
@@ -40,6 +41,8 @@ function Campus() {
   const books = ["#3D5A8C", "#F37021", "#81D8D0", "#F6EFE3", "#C99A2E"];
   return (
     <group>
+      {/* the York logo plaque by the elevator */}
+      <LogoPlaque at={[-W / 2 + 2.15, 2.35, BACK + 0.01]} src={education.logo} />
       {/* banner */}
       <group position={[0.7, 2.5, BACK]}>
         <Box at={[0, 0, 0]} size={[3.3, 0.5, 0.03]} color="#3D5A8C" cast={false} />

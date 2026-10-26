@@ -1,10 +1,17 @@
 import localFont from "next/font/local";
 
 /**
- * List-view body type: DM Sans (local OFL file, self-hosted by next/font).
- * Headings in the list use Fraunces (already loaded for the site); the 3D
- * boards and the city HUD keep their own fonts.
+ * Normal-website type (local OFL files, self-hosted by next/font): Space
+ * Grotesk for the name and headings, DM Sans for body text. The 3D boards and
+ * the city HUD keep their own fonts.
  */
+export const listDisplay = localFont({
+  src: "./space-grotesk-latin-wght-normal.woff2",
+  variable: "--font-space-grotesk",
+  weight: "300 700",
+  display: "swap",
+});
+
 export const listBody = localFont({
   src: "./dm-sans-latin-wght-normal.woff2",
   variable: "--font-dm-sans",

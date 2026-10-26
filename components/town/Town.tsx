@@ -59,7 +59,7 @@ export default function Town() {
     if (ready) beginIntro();
   }, [ready]);
 
-  // the simulated Toronto clock runs in real time
+  // the simulated clock runs in real time
   useEffect(() => {
     let last = performance.now();
     const id = setInterval(() => {
@@ -86,6 +86,12 @@ export default function Town() {
         return;
       }
       if (e.key === "?" && !e.repeat) useTown.getState().openStart();
+      // M: a silent mute / unmute (no visible sound control)
+      if (e.code === "KeyM" && !e.repeat) {
+        const st = useTown.getState();
+        if (!st.sound && !cityAudio.started) cityAudio.startFromGesture();
+        st.toggleSound();
+      }
       if (e.code === "KeyE" && !e.repeat) runtime.input.enter = true;
       if (e.code === "KeyV" && !e.repeat && !useTown.getState().interior) togglePov();
       if (e.code === "Escape" && useTown.getState().pov) setPov(false);

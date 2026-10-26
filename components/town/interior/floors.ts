@@ -12,7 +12,7 @@ export type FloorMeta = {
   id: string;
   label: string;
   sub?: string;
-  year?: number;
+  dates?: string;
   logo?: string;
   /** backdrop + transition tint */
   mood: string;
@@ -22,24 +22,26 @@ export type FloorMeta = {
 
 export type TowerId = Exclude<BuildingId, "home">;
 
-/* ── Experience Tower: Cohere on top (floor 01) down to AIESEC (floor 10) ── */
+/* ── Experience Tower: one room per role, Cohere on top down to AIESEC ── */
 const EXP_MOOD: Record<string, string> = {
   cohere: "#3B3F8F",
   wealthsimple: "#D9D2C3",
   shopify: "#7FB069",
   "vector-institute": "#2A3B4F",
+  "york-ta": "#3D5A8C",
   "aws-sbg": "#E59A3A",
   mali: "#B5654A",
   "yu-blueprint": "#4C7BB8",
   "itreb-canada": "#6E8C8A",
+  "vex-robotics": "#B8352E",
   "prince-aly-khan-hospital": "#8FCFC4",
   aiesec: "#3C78C8",
 };
 export const EXPERIENCE_FLOORS: (FloorMeta & { exp: Experience })[] = experiences.map((e) => ({
   id: e.id,
-  label: e.company,
+  label: e.org, // the selector has room for the name alone; the plaque shows " · Internship"
   sub: e.role,
-  year: e.year,
+  dates: e.dates,
   logo: e.logo,
   mood: EXP_MOOD[e.id] ?? "#5FB8AE",
   speech: `exp-${e.id}`,

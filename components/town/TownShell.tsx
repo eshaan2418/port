@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { hasWebGL } from "@/lib/hooks";
-import { readSavedMode } from "@/lib/mode";
+import { LEGACY_MODE_KEY } from "@/lib/mode";
 import { Chooser } from "@/components/chooser/Chooser";
 import { useTown } from "./state";
 
@@ -19,9 +19,9 @@ const Town = dynamic(() => import("./Town"), { ssr: false });
  * at /agent. The list is in the server-rendered DOM in every mode (visually
  * hidden unless it's showing) for crawlers and screen readers.
  *
- * Order: ?view=list|city|agent, then "remember my choice", then the
- * fallbacks (reduced motion / no WebGL → the list, with a notice), else the
- * chooser. ?choose=1 always opens the chooser ("switch mode"). A slow device
+ * Order: ?view=list|city|agent, then the fallbacks (reduced motion / no
+ * WebGL → the list, with a notice), else the chooser, which shows on every
+ * visit. ?choose=1 always opens it ("switch mode"). A slow device
  * still drops from the city to the list (Town's PerfCheck). The pre-paint
  * script in app/layout.tsx mirrors this, so nothing flashes.
  */
@@ -40,19 +40,21 @@ export function TownShell({ list, projectImages }: { list: ReactNode; projectIma
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const view = params.get("view");
-    const saved = params.has("choose") ? null : readSavedMode();
+    try {
+      localStorage.removeItem(LEGACY_MODE_KEY); // an older build saved the pick: clear it
+    } catch {}
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const noGL = !hasWebGL();
     const noGLReason = "this browser doesn't support WebGL";
     if (params.has("choose")) setMode("choose");
-    else if (view === "agent" || (!view && saved === "agent")) {
+    else if (view === "agent") {
       window.location.replace("/agent/");
       return;
-    } else if (view === "list" || (!view && saved === "list")) setMode("list");
-    else if (view === "city" || (!view && saved === "town")) {
+    } else if (view === "list") setMode("list");
+    else if (view === "city") {
       if (noGL) setMode("list", noGLReason);
       else {
-        if (view === "city") useTown.setState({ chosen: true }); // forced: skip the slow-device check
+        useTown.setState({ chosen: true }); // forced: skip the slow-device check
         setMode("town");
       }
     } else if (reduced) setMode("list", "your device asks for reduced motion");

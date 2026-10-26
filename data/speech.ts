@@ -26,17 +26,19 @@ export const speech: SpeechLine[] = [
   { id: "home-study", text: "my desk. this is where the work happens by day, and the studying at night.", approved: false },
   { id: "home-kitchen", text: "the kitchen. breakfast, lunch and dinner all happen at this table.", approved: false },
 
-  // Experience Tower (said on arriving at each room)
-  { id: "exp-cohere", text: "this is cohere. i'm joining as a forward deployed engineer intern in toronto, winter 2027.", approved: false },
-  { id: "exp-wealthsimple", text: "wealthsimple: an engineering internship in toronto, fall 2026.", approved: false },
-  { id: "exp-shopify", text: "shopify, as a machine learning engineer intern. search relevance and recommendations for product discovery.", approved: false },
-  { id: "exp-vector-institute", text: "the vector institute. i developed sage-kv here, a sparse attention mechanism that cut transformer decode latency.", approved: false },
-  { id: "exp-aws-sbg", text: "i founded our aws student builder group at york university and grew it into a 200+ member cloud community.", approved: false },
-  { id: "exp-mali", text: "at mali i was a founding machine learning software engineer, building and deploying pytorch pipelines.", approved: false },
-  { id: "exp-yu-blueprint", text: "yu blueprint: ml-driven apps for nonprofit organizations, with react and django.", approved: false },
-  { id: "exp-itreb-canada", text: "at itreb canada i built spring boot microservices and secure rest apis.", approved: false },
-  { id: "exp-prince-aly-khan-hospital", text: "prince aly khan hospital: secure healthcare workflows and responsive react interfaces.", approved: false },
-  { id: "exp-aiesec", text: "aiesec, where i was vp of technology, supporting global exchange programs.", approved: false },
+  // Experience Tower (said on arriving at each room; only what data/experiences.ts says)
+  { id: "exp-cohere", text: "i'm a member of technical staff intern at cohere, on north models. incoming winter'27.", approved: false },
+  { id: "exp-wealthsimple", text: "i'm an engineering intern at wealthsimple, working on financial markets.", approved: false },
+  { id: "exp-shopify", text: "i was an engineering intern at shopify: sidekick, recommendations and search relevance. i received a return offer.", approved: false },
+  { id: "exp-york-ta", text: "i was a teaching assistant for eecs 1021 at york university.", approved: false },
+  { id: "exp-aws-sbg", text: "i was a student builder group leader with aws, and founded a 200+ member community.", approved: false },
+  { id: "exp-vector-institute", text: "i was a researcher at the vector institute, and authored a paper on inference.", approved: false },
+  { id: "exp-mali", text: "i was a founding engineer at mali: backed by ibm, with a 5-figure exit.", approved: false },
+  { id: "exp-yu-blueprint", text: "yu blueprint: a university club where i made friends and built projects.", approved: false },
+  { id: "exp-itreb-canada", text: "at itreb canada i built software used by thousands of community members.", approved: false },
+  { id: "exp-vex-robotics", text: "i was a bot programmer for vex robotics, and built some cool bots using c++.", approved: false },
+  { id: "exp-prince-aly-khan-hospital", text: "at prince aly khan hospital i built tools that helped hospital teams manage information and support day-to-day medical work.", approved: false },
+  { id: "exp-aiesec", text: "i was vp of technology at aiesec.", approved: false },
 
   // Projects Gallery (on arriving; each frame then reads its project's own description, below)
   { id: "proj-hall", text: "this is the projects gallery. pick a frame to take a closer look.", approved: false },

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { site } from "@/data/site";
 import { hasWebGL } from "@/lib/hooks";
-import { lowPowerDevice, saveMode, type SavedMode } from "@/lib/mode";
+import { lowPowerDevice, type Mode } from "@/lib/mode";
 import { listBody } from "@/app/fonts/list";
 import { useTown } from "@/components/town/state";
+import { cityAudio } from "@/components/town/audio/engine";
 
 const noop = () => () => {};
 
@@ -13,11 +14,10 @@ const noop = () => () => {};
  * The first-load mode chooser: free roam (the 3D city), normal website (the
  * list view) or the AI agent version (/agent). It's an overlay: the whole
  * site's content stays in the server-rendered HTML underneath. Cards work
- * with Tab + Enter and the keys 1 / 2 / 3; "remember my choice" saves it.
+ * with Tab + Enter and the keys 1 / 2 / 3. It shows on every visit to "/".
  */
 export function Chooser({ pending }: { pending: boolean }) {
   const setMode = useTown((s) => s.setMode);
-  const [remember, setRemember] = useState(false);
   const dialog = useRef<HTMLDivElement>(null);
   const agentLink = useRef<HTMLAnchorElement>(null);
   // client-only facts (false during SSR / hydration, so the markup matches)
@@ -25,9 +25,13 @@ export function Chooser({ pending }: { pending: boolean }) {
   const noGL = useSyncExternalStore(noop, () => !hasWebGL(), () => false);
   const reduced = useSyncExternalStore(noop, () => window.matchMedia("(prefers-reduced-motion: reduce)").matches, () => false);
 
-  const pick = (m: SavedMode) => {
-    saveMode(remember ? m : null);
+  const pick = (m: Mode) => {
     if (m === "agent") return; // the link navigates
+    if (m === "town") {
+      // this click / key press is the user gesture: start the music right now, as the world loads
+      cityAudio.startFromGesture();
+      useTown.setState({ sound: true, muted: false });
+    }
     setMode(m === "town" ? "town" : "list");
   };
 
@@ -37,7 +41,7 @@ export function Chooser({ pending }: { pending: boolean }) {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const t = e.target as HTMLElement;
-      if (["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName) && (t as HTMLInputElement).type !== "checkbox") return;
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName)) return;
       if (e.key === "1" && !noGL) pick("town");
       if (e.key === "2") pick("list");
       if (e.key === "3") {
@@ -48,7 +52,7 @@ export function Chooser({ pending }: { pending: boolean }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pending, noGL, remember]);
+  }, [pending, noGL]);
 
   const keyCap = "inline-flex h-7 min-w-7 self-start items-center justify-center rounded-[6px] border px-1.5 font-mono text-[0.75rem]";
   return (
@@ -63,10 +67,6 @@ export function Chooser({ pending }: { pending: boolean }) {
       className={`chooser fixed inset-0 z-50 overflow-y-auto bg-cream text-ink ${listBody.variable}`}
     >
       <div className="mx-auto flex min-h-full max-w-[72rem] flex-col justify-center px-5 py-12 md:px-10">
-        <p className="micro-label flex items-center gap-2 text-ink/70">
-          <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-orange" />
-          {site.location}
-        </p>
         <h1 id="chooser-title" className="mt-4 font-display text-[clamp(2.6rem,7vw,5.2rem)] leading-[0.95] tracking-[-0.025em] lowercase">
           {site.name.toLowerCase()}
         </h1>
@@ -121,11 +121,7 @@ export function Chooser({ pending }: { pending: boolean }) {
           </li>
         </ul>
 
-        <div className="mt-7 flex flex-wrap items-center justify-between gap-4">
-          <label className="inline-flex cursor-pointer items-center gap-2.5 text-[0.95rem]">
-            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="h-4.5 w-4.5 accent-ink" />
-            remember my choice
-          </label>
+        <div className="mt-7 flex flex-wrap items-center justify-end gap-4">
           <p className="text-[0.85rem] text-ink/70">
             press <kbd className="font-mono">1</kbd>, <kbd className="font-mono">2</kbd> or <kbd className="font-mono">3</kbd> · switch any time
           </p>

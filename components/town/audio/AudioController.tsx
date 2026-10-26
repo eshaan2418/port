@@ -6,8 +6,8 @@ import { runtime, useTown } from "../state";
 import { cityAudio } from "./engine";
 
 /**
- * Bridges the store to the audio engine: starts it on the first enable (a
- * user gesture), mirrors mute / volume / day-night, pauses while the tab is
+ * Bridges the store to the audio engine: picking free roam starts it (see
+ * the chooser), or the first click / key if the city was reached without one; mirrors mute / volume / day-night, pauses while the tab is
  * hidden, ticks footsteps from the player's speed, and swells passing
  * motorcycle / sportscar engines by distance.
  */
@@ -20,8 +20,33 @@ export function AudioController() {
     if (sound && !cityAudio.started) void cityAudio.start();
     cityAudio.setEnabled(sound);
   }, [sound]);
+  // audio only ever plays in free roam: leaving the city (switch mode / the list) silences it
+  useEffect(() => () => cityAudio.setEnabled(false), []);
+
+  // reached the city without a click (?view=city): start on the first click or key press
+  useEffect(() => {
+    if (cityAudio.status.enabled || useTown.getState().muted) return;
+    const go = () => {
+      if (!useTown.getState().muted) {
+        cityAudio.startFromGesture();
+        useTown.setState({ sound: true });
+      }
+      window.removeEventListener("pointerdown", go, true);
+      window.removeEventListener("keydown", go, true);
+    };
+    window.addEventListener("pointerdown", go, true);
+    window.addEventListener("keydown", go, true);
+    return () => {
+      window.removeEventListener("pointerdown", go, true);
+      window.removeEventListener("keydown", go, true);
+    };
+  }, []);
   useEffect(() => cityAudio.setVolume(volume), [volume]);
-  useEffect(() => cityAudio.setVariant(night ? "night" : "day"), [night]);
+  // ?audio=day / ?audio=night pins a variant (to compare them by ear); otherwise it follows the clock
+  useEffect(() => {
+    const forced = new URLSearchParams(window.location.search).get("audio");
+    cityAudio.setVariant(forced === "day" || forced === "night" ? forced : night ? "night" : "day");
+  }, [night]);
 
   useEffect(() => {
     const onVis = () => cityAudio.setHidden(document.hidden);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   Building2,
@@ -15,8 +15,6 @@ import {
   List,
   Mail,
   Trophy,
-  Volume2,
-  VolumeX,
   type LucideIcon,
 } from "lucide-react";
 import { site, mailto } from "@/data/site";
@@ -25,7 +23,7 @@ import { BUILDINGS, type BuildingId } from "../world/layout";
 import { useTown } from "../state";
 import { enterBuilding } from "../scene/Player";
 import { togglePov } from "../controls";
-import { formatClock, isDayTime, torontoHours } from "@/lib/time";
+import { formatClock, isDayTime, clockHours } from "@/lib/time";
 import { Joystick } from "./Joystick";
 import { FocusPrompt } from "./FocusPrompt";
 import { StartCard } from "./StartCard";
@@ -89,31 +87,27 @@ export function Hud({ touch }: { touch: boolean }) {
  */
 function Letterbox({ intro }: { intro: boolean }) {
   const ready = useTown((s) => s.ready);
-  const [skippable, setSkippable] = useState(false);
-  useEffect(() => {
-    if (!ready || !intro) return;
-    const id = setTimeout(() => setSkippable(true), 3000);
-    return () => clearTimeout(id);
-  }, [ready, intro]);
   const bar = "absolute inset-x-0 h-[clamp(1.75rem,7vh,4.25rem)] bg-ink transition-transform duration-700 ease-in-out";
   return (
     <div aria-hidden={!intro}>
       <div className={`${bar} top-0 ${intro ? "" : "-translate-y-full"}`} />
-      <div className={`${bar} bottom-0 flex items-center justify-end px-4 md:px-6 ${intro ? "" : "translate-y-full"}`}>
-        {intro && (
-          <button
-            type="button"
-            onClick={skipIntro}
-            tabIndex={skippable ? 0 : -1}
-            aria-label="Skip the intro (Esc or Enter)"
-            className={`micro-label rounded px-1.5 py-1 text-[0.58rem] text-cream/40 transition-opacity duration-500 hover:text-cream/80 focus-visible:text-cream ${
-              skippable ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
-            }`}
-          >
-            skip
-          </button>
-        )}
-      </div>
+      <div className={`${bar} bottom-0 ${intro ? "" : "translate-y-full"}`} />
+      {/* skip: a real button, there from the start of the intro (fades in once the world is up) */}
+      {intro && (
+        <button
+          type="button"
+          onClick={skipIntro}
+          aria-label="Skip the intro (Enter or Esc)"
+          className={`skip-intro pointer-events-auto absolute right-[max(1rem,env(safe-area-inset-right))] bottom-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.75rem))] inline-flex h-14 items-center gap-3 rounded-full border-2 border-tiffany bg-ink px-6 text-[18px] font-semibold text-tiffany shadow-[0_10px_30px_-8px_rgb(0_0_0/0.6)] transition-[opacity,background-color,color] duration-500 hover:bg-tiffany hover:text-ink focus-visible:bg-tiffany focus-visible:text-ink md:right-6 md:bottom-6 md:h-[52px] ${
+            ready ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          skip intro <span aria-hidden="true">→</span>
+          <kbd aria-hidden="true" className="hidden rounded-[6px] border border-current/50 px-1.5 py-0.5 font-mono text-[0.72rem] font-medium md:inline">
+            Enter
+          </kbd>
+        </button>
+      )}
     </div>
   );
 }
@@ -121,15 +115,13 @@ function Letterbox({ intro }: { intro: boolean }) {
 function Identity() {
   return (
     <div className={`${pill} absolute top-3 left-3 rounded-[16px] px-3 py-2 md:top-6 md:left-6 md:rounded-[18px] md:px-5 md:py-4`}>
-      <p className="micro-label text-[0.52rem] text-muted md:text-[0.68rem]">{site.location}</p>
-      <p className="mt-1 font-display text-[1.25rem] leading-none lowercase md:mt-1.5 md:text-[2.1rem]">eshaan kapooswalla</p>
-      <p className="mt-0.5 text-[0.68rem] text-ink/75 md:mt-1 md:text-[0.92rem]">engineering + community builder</p>
+      <p className="font-display text-[1.25rem] leading-none lowercase md:text-[2.1rem]">eshaan kapooswalla</p>
     </div>
   );
 }
 
 /**
- * The clock (click to open the time scrubber; it runs on America/Toronto time internally), day/night toggle and the
+ * The clock (click to open the time scrubber; it runs on lib/time TIME_ZONE internally), day/night toggle and the
  * POV switch, under the name card. Inside Home the scrubber stays open so you
  * can watch his day.
  */
@@ -143,7 +135,7 @@ function TimeBar() {
   const day = isDayTime(time);
   const showScrubber = open || interior === "home";
   return (
-    <div className="absolute top-[5.4rem] left-3 flex flex-col items-start gap-2 md:top-[8.6rem] md:left-6">
+    <div className="absolute top-[4.1rem] left-3 flex flex-col items-start gap-2 md:top-[6.6rem] md:left-6">
       <div className={`${pill} flex items-center gap-0.5 p-1`}>
         <button
           type="button"
@@ -175,7 +167,7 @@ function TimeBar() {
         <div id="time-scrubber" className={`${pill} w-[min(20rem,calc(100vw-1.5rem))] rounded-[16px] px-4 pt-3 pb-2`}>
           <label className="flex items-center justify-between">
             <span className="micro-label text-[0.6rem] text-muted">time of day</span>
-            <button type="button" onClick={() => setTime(torontoHours())} className="micro-label rounded-full px-2 py-1 text-[0.6rem] text-ink hover:bg-ink hover:text-cream">
+            <button type="button" onClick={() => setTime(clockHours())} className="micro-label rounded-full px-2 py-1 text-[0.6rem] text-ink hover:bg-ink hover:text-cream">
               now
             </button>
           </label>
@@ -204,10 +196,6 @@ function TimeBar() {
 }
 
 function TopRight() {
-  const sound = useTown((s) => s.sound);
-  const volume = useTown((s) => s.volume);
-  const toggleSound = useTown((s) => s.toggleSound);
-  const setVolume = useTown((s) => s.setVolume);
   const setMode = useTown((s) => s.setMode);
   return (
     <div className="absolute top-3 right-3 flex flex-col items-end gap-2 md:top-6 md:right-6 md:flex-row md:items-center">
@@ -230,29 +218,6 @@ function TopRight() {
         >
           <CircleHelp size={17} strokeWidth={1.7} />
         </button>
-        <button
-          type="button"
-          onClick={toggleSound}
-          className={iconBtn}
-          aria-pressed={sound}
-          aria-label={sound ? "Mute sound" : "Turn sound on"}
-        >
-          {sound ? <Volume2 size={17} strokeWidth={1.7} /> : <VolumeX size={17} strokeWidth={1.7} />}
-        </button>
-        {sound && (
-          <label className="flex items-center pr-2.5 pl-1">
-            <span className="sr-only">Volume</span>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              step={5}
-              value={Math.round(volume * 100)}
-              onChange={(e) => setVolume(Number(e.target.value) / 100)}
-              className="h-1 w-16 cursor-pointer accent-orange md:w-20"
-            />
-          </label>
-        )}
       </div>
       <button
         type="button"

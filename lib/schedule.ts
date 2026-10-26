@@ -1,5 +1,5 @@
 /**
- * Eshaan's day at Home, by Toronto time (hours, 0–24). One source of truth for
+ * Eshaan's day at Home, by the site clock (hours, 0–24). One source of truth for
  * the Home interior, the intro shot, the outdoor idles and the list view.
  */
 

@@ -8,7 +8,7 @@ import { fadeSwap, speak } from "../interior/transitions";
 
 /**
  * The opening sequence, played once per page load:
- *   hold   – the Home cutaway on whatever he's doing right now (Toronto time)
+ *   hold   – the Home cutaway on whatever he's doing right now (the site clock)
  *   notice – he spots you: a "!" pop, turns (or sits up) to face the camera
  *   speak  – the line for that activity types out
  *   getup  – stands up from the bed / chair

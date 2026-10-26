@@ -120,88 +120,416 @@ body {
   }
 }
 
-/* ── List view: solid colours ──────────────────────────────────────────
-   Cream page, paper cards with a hairline, ink text; a solid ink navbar
-   and contact card. Hermès orange is the accent (markers, the active nav
-   line, link underlines, "featured", the main buttons, always with ink
-   text on it), soft Tiffany for tags. Contrast: ink on cream ~16:1, ink/70
-   ~7:1, ink on orange ~6.4:1, cream on ink ~16:1.
-   Headings: Fraunces; body: DM Sans (app/fonts). */
+/* ── Normal website (list view): dark cards on a flat Tiffany page ─────
+   Page: solid Tiffany #81D8D0 (no pattern). Cards #17191C with a #2A2D31
+   hairline. Contrast (WCAG AA, all checked): text directly on the page is
+   ink #0E0F11 (11.9:1); on cards, cream #F2EDE4 15:1, muted #9A968E 6:1,
+   Tiffany 10.6:1; Tiffany on the ink button 11.9:1. Tiffany text never sits
+   on the Tiffany page. Orange is only a hover accent, never text.
+   Space Grotesk (name, headings) + DM Sans (body), see app/fonts/list.ts.
+   Desktop (≥1100 × 700): a 100dvh grid with no page scroll. Smaller: one
+   scrolling column (top bar, education, experience, extracurriculars,
+   projects, contact: the DOM order). */
 .list-view {
-  --font-manrope: var(--font-dm-sans); /* font-sans → DM Sans here */
-  position: relative;
-  overflow-x: clip;
+  --lv-page: #81d8d0;
+  --lv-ink: #0e0f11;
+  --lv-card: #17191c;
+  --lv-line: #2a2d31;
+  --lv-text: #f2ede4;
+  --lv-muted: #9a968e;
+  --font-manrope: var(--font-dm-sans);
   font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  color: var(--ink);
-  background: var(--cream);
+  color: var(--lv-text);
+  background: var(--lv-page);
+  min-height: 100dvh;
 }
-.list-view .list-wrap {
+.list-view .lv-frame {
   margin-inline: auto;
-  max-width: 72rem;
-  padding-inline: 1.5rem;
+  max-width: 1560px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
-@media (min-width: 768px) {
-  .list-view .list-wrap {
-    padding-inline: 2.5rem;
+.list-view .lv-card {
+  background: var(--lv-card);
+  border: 1px solid var(--lv-line);
+  border-radius: 14px;
+}
+.list-view .lv-pad {
+  padding: 0.85rem 1rem;
+}
+
+/* top bar */
+.list-view .lv-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  min-height: 72px;
+  padding: 0.6rem 1.1rem;
+  color: var(--lv-ink);
+  border: 1.5px solid var(--lv-ink);
+  border-radius: 14px;
+}
+.list-view .lv-name {
+  font-family: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  font-size: clamp(1.45rem, 3.4vh, 2.1rem);
+  white-space: nowrap;
+}
+.list-view .lv-sub {
+  margin-top: 0.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+  color: var(--lv-ink);
+}
+.list-view .lv-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.1rem;
+  font-size: 0.95rem;
+}
+
+/* labels, text */
+.list-view .lv-label {
+  margin: 0 0 0.45rem 0.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lv-ink);
+  font-weight: 600;
+}
+.list-view .lv-strong {
+  font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.92rem;
+  line-height: 1.3;
+}
+.list-view .lv-muted {
+  color: var(--lv-muted);
+  font-size: 0.85rem;
+}
+.list-view .lv-small {
+  font-size: 0.85rem;
+}
+.list-view .lv-tag {
+  display: inline-block;
+  align-self: flex-start;
+  border: 1px solid rgb(129 216 208 / 0.35);
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--tiffany);
+}
+.list-view .lv-tag-text {
+  font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.8rem;
+  padding: 0.12rem 0.6rem;
+}
+
+/* experience */
+.list-view .lv-exp-list {
+  display: flex;
+  flex-direction: column;
+  background: var(--lv-card);
+  border: 1px solid var(--lv-line);
+  border-radius: 14px;
+  padding: 0.25rem 0.9rem;
+}
+.list-view .lv-exp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--lv-line);
+}
+.list-view .lv-exp-row:first-child {
+  border-top: 0;
+}
+.list-view .lv-exp-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.86rem;
+  line-height: 1.3;
+}
+.list-view .lv-company {
+  font-weight: 400;
+  color: var(--lv-muted);
+}
+.list-view .lv-dates {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--lv-muted);
+  white-space: nowrap;
+  text-align: right;
+}
+.list-view .lv-exp-line {
+  margin-top: 0.1rem;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--lv-muted);
+}
+
+/* projects */
+.list-view .lv-proj-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+.list-view .lv-project {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  height: 100%;
+  padding: 0.85rem 0.95rem;
+  overflow: hidden;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.list-view .lv-project:hover {
+  border-color: #a9e6e0;
+  box-shadow: 0 0 0 1px rgb(169 230 224 / 0.4), 0 10px 28px -12px rgb(14 15 17 / 0.6);
+}
+.list-view .lv-project:hover .lv-arrow {
+  color: var(--orange);
+}
+.list-view .lv-arrow {
+  color: var(--lv-muted);
+  transition: color 0.2s;
+}
+.list-view .lv-proj-name {
+  font-family: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.98rem;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.list-view .lv-proj-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--lv-muted);
+}
+.list-view .lv-project .lv-tag {
+  margin-top: auto;
+}
+
+/* contact */
+.list-view .lv-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.list-view .lv-contact-title {
+  font-family: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+.list-view .lv-foot {
+  font-size: 0.72rem;
+  color: var(--lv-muted);
+}
+
+/* buttons + links */
+.list-view .lv-btn,
+.list-view .lv-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2.35rem;
+  border-radius: 999px;
+  padding: 0 1rem;
+  font-weight: 600;
+  font-size: 0.88rem;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+}
+/* on cards: a Tiffany pill with ink text (the contact button) */
+.list-view .lv-btn {
+  background: var(--tiffany);
+  color: var(--lv-ink);
+}
+.list-view .lv-btn:hover {
+  background: var(--lv-text);
+}
+/* on the page: "explore in 3D" is an ink pill with Tiffany text */
+.list-view .lv-top .lv-btn {
+  background: var(--lv-ink);
+  color: var(--tiffany);
+}
+.list-view .lv-top .lv-btn:hover {
+  background: #1d2023;
+  box-shadow: 0 0 0 2px var(--orange);
+}
+.list-view .lv-btn-ghost {
+  border: 1.5px solid var(--lv-ink);
+  color: var(--lv-ink);
+}
+.list-view .lv-btn-ghost:hover {
+  background: var(--lv-ink);
+  color: var(--tiffany);
+}
+.list-view .lv-links > a {
+  color: var(--lv-ink);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: rgb(14 15 17 / 0.5);
+  text-underline-offset: 0.22em;
+}
+.list-view .lv-links > a:hover {
+  text-decoration-color: var(--lv-ink);
+  text-decoration-thickness: 2px;
+}
+.list-view .lv-inline-link {
+  color: var(--tiffany);
+  text-decoration: underline;
+  text-decoration-color: rgb(129 216 208 / 0.45);
+  text-underline-offset: 0.22em;
+}
+.list-view .lv-inline-link:hover {
+  text-decoration-color: var(--orange);
+}
+/* focus: Tiffany on the dark cards, ink on the Tiffany page */
+.list-view :focus-visible {
+  outline: 2px solid var(--tiffany);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.list-view .lv-top :focus-visible,
+.list-view .lv-label:focus-visible {
+  outline-color: var(--lv-ink);
+}
+.list-view .lv-notice {
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+}
+
+/* stacked (phones, narrow or short windows): titles wrap, dates drop under them */
+@media not ((min-width: 1100px) and (min-height: 700px)) {
+  .list-view .lv-exp-title {
+    white-space: normal;
+  }
+  .list-view .lv-exp-row > div > div {
+    flex-wrap: wrap;
+    row-gap: 0.1rem;
   }
 }
-.list-view section[id],
-.list-view header[id] {
-  scroll-margin-top: 5rem;
+.list-view .lv-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
-.list-view :where(h1, h2, h3, h4) {
-  font-weight: 400;
-  letter-spacing: -0.025em;
-  font-variation-settings: "SOFT" 30, "opsz" 144;
+@media (min-width: 640px) {
+  .list-view .lv-proj-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
-.list-view :where(h3, h4) {
-  font-variation-settings: "SOFT" 30, "opsz" 48;
-}
-.list-view :focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 3px;
-}
-.list-view :is(.bg-ink, .list-nav nav) :focus-visible {
-  outline-color: var(--orange);
-}
-.list-view .card {
-  background: #fffdf8;
-  border: 1px solid #e6dccd;
-  box-shadow: 0 1px 0 rgb(18 18 18 / 0.03);
-  transition:
-    border-color 0.3s var(--ease-lux),
-    box-shadow 0.3s var(--ease-lux);
-}
-.list-view .card:hover {
-  border-color: #cdbca5;
-  box-shadow: 0 14px 30px -22px rgb(18 18 18 / 0.35);
-}
-.list-view .bg-tiffany-soft {
-  background: #d4f0ec;
-}
-.list-view a:not(.btn) {
-  text-decoration: underline;
-  text-decoration-color: var(--orange);
-  text-underline-offset: 0.24em;
-  text-decoration-thickness: 1.5px;
-  transition: text-decoration-thickness 0.2s;
-}
-.list-view a:not(.btn):hover {
-  text-decoration-thickness: 2.5px;
-}
-.list-view a.no-underline {
-  text-decoration: none;
-}
-/* the navbar's current-section marker */
-.list-view .nav-link[aria-current="true"]::after {
-  content: "";
-  position: absolute;
-  left: 0.75rem;
-  right: 0.75rem;
-  bottom: 0.2rem;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--orange);
+
+/* desktop: everything on one screen, no page scroll */
+@media (min-width: 1100px) and (min-height: 700px) {
+  .list-view .lv-frame {
+    height: 100dvh;
+    padding: clamp(0.75rem, 1.6vh, 1.25rem);
+    gap: clamp(0.6rem, 1.4vh, 1rem);
+    overflow: hidden;
+  }
+  .list-view .lv-grid {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    gap: clamp(0.6rem, 1.4vh, 1rem) 1rem;
+    grid-template-columns: minmax(0, 34fr) minmax(0, 40fr) minmax(0, 26fr);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      "exp proj edu"
+      "exp proj extra"
+      "exp proj contact";
+  }
+  .list-view .lv-area-edu {
+    grid-area: edu;
+  }
+  .list-view .lv-area-extra {
+    grid-area: extra;
+  }
+  .list-view .lv-area-contact {
+    grid-area: contact;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .list-view .lv-area-contact .lv-contact {
+    flex: 1;
+    justify-content: center;
+  }
+  .list-view .lv-area-exp,
+  .list-view .lv-area-proj {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .list-view .lv-area-exp {
+    grid-area: exp;
+  }
+  .list-view .lv-area-proj {
+    grid-area: proj;
+  }
+  .list-view .lv-exp-list {
+    flex: 1;
+    min-height: 0;
+  }
+  .list-view .lv-exp-row {
+    flex: 1;
+    min-height: 0;
+    padding: 0;
+  }
+  .list-view .lv-exp-line {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .list-view .lv-proj-grid {
+    flex: 1;
+    min-height: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+  }
+  .list-view .lv-proj-grid > li {
+    min-height: 0;
+  }
+  /* scale type with the window height so it all fits from 768 to 1080 tall */
+  .list-view .lv-exp-title {
+    font-size: clamp(0.78rem, 1.6vh, 0.95rem);
+  }
+  .list-view .lv-exp-line {
+    font-size: clamp(0.72rem, 1.45vh, 0.86rem);
+  }
+  .list-view .lv-proj-name {
+    font-size: clamp(0.88rem, 1.85vh, 1.1rem);
+  }
+  .list-view .lv-proj-desc {
+    font-size: clamp(0.74rem, 1.5vh, 0.9rem);
+  }
 }
 
 /* list view decided before hydration (see the inline script in app/layout.tsx):
@@ -215,6 +543,12 @@ html[data-initial-view="list"] [data-list-shell][data-pending] {
   clip: auto;
   white-space: normal;
 }
+/* the intro's skip button: a visible ring on the letterbox */
+.skip-intro:focus-visible {
+  outline: 3px solid var(--cream);
+  outline-offset: 3px;
+}
+
 /* the mode chooser: ink focus rings on the cream page */
 .chooser :focus-visible {
   outline: 3px solid var(--ink);
@@ -225,7 +559,7 @@ html[data-initial-view="list"] [data-list-shell][data-pending] {
 }
 
 /* before hydration: the chooser (server-rendered) shows by default; the
-   cream cover only for a remembered / forced city, and neither when the
+   cream cover only for a forced city (?view=city), and neither when the
    list was picked */
 [data-pending-cover] {
   display: none;
