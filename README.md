@@ -26,7 +26,7 @@ Then upload the **contents** of `dist/` (not the folder itself) into `public_htm
 
 ## Analytics (GA4, no consent banner)
 
-Google Analytics 4 (`G-0JKP2C1CMB`) loads only where it's allowed without asking first, so there is no cookie banner. Everything is in `lib/analytics.ts`; `components/Analytics.tsx` (in the root layout) starts it once per page load. GA loads only if **all** of these pass, otherwise nothing from Google loads at all (no script, no cookies, no cookieless pings):
+Google Analytics 4 (`G-0JKP2C1CMB`) and Umami Cloud (website `9a2ca957-…`, cookieless) load only where it's allowed without asking first, so there is no cookie banner. Everything is in `lib/analytics.ts`; `components/Analytics.tsx` (in the root layout) starts it once per page load. Both load only if **all** of these pass, otherwise neither loads at all (no script, no cookies, no cookieless pings):
 
 1. production build on a real domain (never `npm run dev` or localhost);
 2. `/ga/gate.php` answers `{"analytics": true}`. It reads Hostinger GeoIP (turned on by `public/ga/.htaccess`, which only affects `/ga/`) and allows only the **US** and **Canada outside Quebec** (a province allowlist, so Quebec and unknown provinces are blocked). Every other country, an unknown location, no PHP or any error = no analytics. To allow another country, add it in `gate.php`;
@@ -34,7 +34,7 @@ Google Analytics 4 (`G-0JKP2C1CMB`) loads only where it's allowed without asking
 
 The root `.htaccess` has nothing to do with analytics. Upload the `ga/` folder (with its hidden `.htaccess`) for tracking to work.
 
-Events (on top of GA's automatic page views, sessions, engagement, outbound `click`s and `file_download`s): `view_mode` (list / city), `section_view` (city building entered), `experience_view`, `project_view` (city gallery), `project_click` (a GitHub repo link), `social_click` (`platform`: linkedin / github), `contact_click` (`method`: email), `resume_download` (any résumé/CV PDF link, once one exists). Each carries `site_view` and, for links, `link_location`. No email addresses or other personal data are sent. **In GA4, "Page changes based on browser history events" must be off** (the site rewrites `?view=` in the URL, which would count a second page view).
+Events (on top of GA's automatic page views, sessions, engagement, outbound `click`s and `file_download`s): `view_mode` (list / city), `section_view` (city building entered), `experience_view`, `project_view` (city gallery), `project_click` (a GitHub repo link), `social_click` (`platform`: linkedin / github), `contact_click` (`method`: email), `resume_download` (any résumé/CV PDF link, once one exists). Each carries `site_view` and, for links, `link_location`. Every event goes to both GA4 and Umami. Umami's automatic tracking is off (`data-auto-track="false"`): it sends exactly one page view per page load (real URL, real referrer), since its history tracking would count the `?view=` URL rewrites as extra page views. No email addresses or other personal data are sent. **In GA4, "Page changes based on browser history events" must be off** (the site rewrites `?view=` in the URL, which would count a second page view).
 
 ## Where to edit content
 

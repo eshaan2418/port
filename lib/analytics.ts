@@ -1,8 +1,8 @@
 import { site } from "@/data/site";
 
 /**
- * Google Analytics 4, only where it's allowed without asking first (there is no
- * consent banner, by design). GA loads only when every check passes:
+ * Google Analytics 4 and Umami, only where they're allowed without asking first
+ * (there is no consent banner, by design). Both load only when every check passes:
  *
  * 1. a production build on a real domain (never `next dev` or localhost);
  * 2. the server says the visitor's location doesn't need prior consent:
@@ -12,19 +12,26 @@ import { site } from "@/data/site";
  * 3. the browser doesn't send Global Privacy Control / Do Not Track, and the
  *    visitor hasn't opted out with ?analytics=off (?analytics=on undoes it).
  *
- * Otherwise nothing from Google loads: no script, no cookies, no requests
- * (not even consent-mode "cookieless pings"). See README → Analytics.
+ * Otherwise neither loads: no script, no cookies, no requests (not even
+ * consent-mode "cookieless pings"). See README → Analytics.
  */
 export const GA_ID = "G-0JKP2C1CMB";
+export const UMAMI_WEBSITE_ID = "9a2ca957-ae47-4000-bb94-81246c86658f";
 
 const OPT_OUT_KEY = "analytics-opt-out";
 
 type Params = Record<string, string | number | undefined>;
-type GaWindow = Window & { dataLayer?: unknown[]; gtag?: (...args: unknown[]) => void };
+type GaWindow = Window & {
+  dataLayer?: unknown[];
+  gtag?: (...args: unknown[]) => void;
+  umami?: { track: (name?: string, data?: Params) => void };
+};
 
 let state: "idle" | "checking" | "on" | "off" = "idle";
 /** events from while the gate is being checked: sent if it opens, dropped if not */
 let pending: [string, Params][] = [];
+/** events waiting for Umami's script to arrive (null once it has) */
+let umamiQueue: [string, Params][] | null = [];
 /** which version of the site is showing (chooser / list / city / agent) */
 let siteView = "";
 /** in the city: the building he's in ("outdoors" on the street) */
@@ -38,11 +45,18 @@ export function setCitySection(section: string) {
   citySection = section;
 }
 
-/** a GA4 event; a no-op wherever analytics isn't running */
+/** a GA4 + Umami event; a no-op wherever analytics isn't running */
 export function track(name: string, params: Params = {}) {
   const p = { site_view: siteView || defaultView(), ...params };
   if (state === "checking") pending.push([name, p]);
-  else if (state === "on") (window as GaWindow).gtag?.("event", name, p);
+  else if (state === "on") send(name, p);
+}
+
+function send(name: string, p: Params) {
+  const w = window as GaWindow;
+  w.gtag?.("event", name, p);
+  if (umamiQueue) umamiQueue.push([name, p]);
+  else w.umami?.track(name, p);
 }
 
 /** runs once per page load (the root layout's <Analytics />) */
@@ -55,8 +69,9 @@ export async function initAnalytics() {
     return;
   }
   load();
+  loadUmami();
   state = "on";
-  for (const [name, p] of pending) (window as GaWindow).gtag?.("event", name, p);
+  for (const [name, p] of pending) send(name, p);
   pending = [];
   document.addEventListener("click", onLinkClick, true);
   document.addEventListener("auxclick", onLinkClick, true); // middle-click: opened in a new tab
@@ -114,6 +129,34 @@ function load() {
   const s = document.createElement("script");
   s.async = true;
   s.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+  document.head.appendChild(s);
+}
+
+/**
+ * Umami (cookieless). Its automatic tracking is off: it would count the site's
+ * own ?view= URL rewrites (history.replaceState) as extra page views. Instead
+ * exactly one page view is sent per page load, with the real URL and the
+ * browser's real referrer, then the queued events.
+ */
+function loadUmami() {
+  if (document.querySelector("script[data-website-id]")) return; // one tracker per page, ever
+  const s = document.createElement("script");
+  s.async = true;
+  s.src = "https://cloud.umami.is/script.js";
+  s.dataset.websiteId = UMAMI_WEBSITE_ID;
+  s.dataset.autoTrack = "false";
+  s.dataset.doNotTrack = "true";
+  s.dataset.domains = "eshaankapooswalla.com,www.eshaankapooswalla.com";
+  s.onload = () => {
+    const umami = (window as GaWindow).umami;
+    if (!umami) return;
+    umami.track(); // the page view
+    for (const [name, p] of umamiQueue ?? []) umami.track(name, p);
+    umamiQueue = null;
+  };
+  s.onerror = () => {
+    umamiQueue = null; // blocked or offline: stop queueing
+  };
   document.head.appendChild(s);
 }
 
