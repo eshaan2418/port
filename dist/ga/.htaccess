@@ -1,0 +1,3 @@
+# Applies only to /ga/ (the analytics gate). Turns on Hostinger's GeoIP so
+# gate.php can read the visitor's country and province. Nothing else here.
+GeoIPEnable On

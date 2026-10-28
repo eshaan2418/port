@@ -29,9 +29,10 @@ Then upload the **contents** of `dist/` (not the folder itself) into `public_htm
 Google Analytics 4 (`G-0JKP2C1CMB`) loads only where it's allowed without asking first, so there is no cookie banner. Everything is in `lib/analytics.ts`; `components/Analytics.tsx` (in the root layout) starts it once per page load. GA loads only if **all** of these pass, otherwise nothing from Google loads at all (no script, no cookies, no cookieless pings):
 
 1. production build on a real domain (never `npm run dev` or localhost);
-2. `/ga-gate.json` says `{"analytics": true}`. It ships saying `false`; on Hostinger, `public/.htaccess` turns on GeoIP and serves `ga-gate-allowed.json` instead when the visitor's country is known and isn't on the consent-required list (EEA, UK + Crown dependencies, Switzerland, Türkiye, the EU's outlying regions). Edit that list in `.htaccess`. No GeoIP = nobody tracked;
-3. the device time zone isn't European (`CONSENT_TIME_ZONES`), a local check that catches VPNs; it's never sent anywhere;
-4. no Global Privacy Control / Do Not Track, and no `?analytics=off` opt-out (stored in localStorage; `?analytics=on` undoes it). Use `?analytics=off` on your own browsers so your visits aren't counted.
+2. `/ga/gate.php` answers `{"analytics": true}`. It reads Hostinger GeoIP (turned on by `public/ga/.htaccess`, which only affects `/ga/`) and allows only the **US** and **Canada outside Quebec** (a province allowlist, so Quebec and unknown provinces are blocked). Every other country, an unknown location, no PHP or any error = no analytics. To allow another country, add it in `gate.php`;
+3. no Global Privacy Control / Do Not Track, and no `?analytics=off` opt-out (stored in localStorage; `?analytics=on` undoes it). Use `?analytics=off` on your own browsers so your visits aren't counted.
+
+The root `.htaccess` has nothing to do with analytics. Upload the `ga/` folder (with its hidden `.htaccess`) for tracking to work.
 
 Events (on top of GA's automatic page views, sessions, engagement, outbound `click`s and `file_download`s): `view_mode` (list / city), `section_view` (city building entered), `experience_view`, `project_view` (city gallery), `project_click` (a GitHub repo link), `social_click` (`platform`: linkedin / github), `contact_click` (`method`: email), `resume_download` (any résumé/CV PDF link, once one exists). Each carries `site_view` and, for links, `link_location`. No email addresses or other personal data are sent. **In GA4, "Page changes based on browser history events" must be off** (the site rewrites `?view=` in the URL, which would count a second page view).
 

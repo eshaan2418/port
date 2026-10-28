@@ -5,12 +5,11 @@ import { site } from "@/data/site";
  * consent banner, by design). GA loads only when every check passes:
  *
  * 1. a production build on a real domain (never `next dev` or localhost);
- * 2. the server says the visitor's country doesn't need prior consent:
- *    `.htaccess` (Hostinger GeoIP) swaps /ga-gate.json for ga-gate-allowed.json.
- *    It fails closed: no GeoIP, unknown country or any error = no analytics;
- * 3. the device's time zone isn't European (a second, local-only check that
- *    catches VPNs; the time zone is never sent anywhere);
- * 4. the browser doesn't send Global Privacy Control / Do Not Track, and the
+ * 2. the server says the visitor's location doesn't need prior consent:
+ *    /ga/gate.php reads Hostinger GeoIP and answers true only for the US and
+ *    Canada outside Quebec. It fails closed: an unknown location, no PHP, a
+ *    missing file or any error = no analytics;
+ * 3. the browser doesn't send Global Privacy Control / Do Not Track, and the
  *    visitor hasn't opted out with ?analytics=off (?analytics=on undoes it).
  *
  * Otherwise nothing from Google loads: no script, no cookies, no requests
@@ -19,14 +18,6 @@ import { site } from "@/data/site";
 export const GA_ID = "G-0JKP2C1CMB";
 
 const OPT_OUT_KEY = "analytics-opt-out";
-
-/**
- * Time zones of the EEA, the UK, Switzerland and Türkiye (all of Europe/*, so it
- * over-blocks a little), the EU's outlying regions, and legacy aliases. `UTC` /
- * `Etc/*` (no real location: often privacy-hardened browsers) are blocked too.
- */
-const CONSENT_TIME_ZONES =
-  /^(Europe\/.*|Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe|Faeroe)|Arctic\/Longyearbyen|Asia\/(Nicosia|Famagusta|Istanbul)|Africa\/Ceuta|America\/(Cayenne|Guadeloupe|Martinique|St_Barthelemy|Marigot)|Indian\/(Reunion|Mayotte)|WET|CET|MET|EET|GB|GB-Eire|Eire|Iceland|Poland|Portugal|Turkey|UTC|UCT|GMT|Etc\/.*|Universal|Zulu)$/;
 
 type Params = Record<string, string | number | undefined>;
 type GaWindow = Window & { dataLayer?: unknown[]; gtag?: (...args: unknown[]) => void };
@@ -74,9 +65,9 @@ export async function initAnalytics() {
 async function allowed() {
   if (process.env.NODE_ENV !== "production") return false;
   if (/^(localhost|127\.|\[::1\]|0\.0\.0\.0)/.test(location.hostname)) return false;
-  if (optedOut() || browserOptOut() || timeZoneNeedsConsent()) return false;
+  if (optedOut() || browserOptOut()) return false;
   try {
-    const res = await fetch("/ga-gate.json", { cache: "no-store" });
+    const res = await fetch("/ga/gate.php", { cache: "no-store" });
     if (!res.ok) return false;
     const gate = (await res.json()) as { analytics?: unknown };
     return gate.analytics === true;
@@ -99,15 +90,6 @@ function optedOut() {
 function browserOptOut() {
   const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
   return nav.globalPrivacyControl === true || nav.doNotTrack === "1";
-}
-
-function timeZoneNeedsConsent() {
-  try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    return !tz || CONSENT_TIME_ZONES.test(tz);
-  } catch {
-    return true;
-  }
 }
 
 function load() {

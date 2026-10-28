@@ -26,24 +26,3 @@ DirectoryIndex index.html
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE text/html text/css text/plain application/javascript application/json image/svg+xml
 </IfModule>
-
-# ── analytics gate (see lib/analytics.ts and README → Analytics) ─────────────
-# The site only loads Google Analytics if /ga-gate.json says {"analytics": true}.
-# By default it says false. Hostinger's GeoIP swaps in ga-gate-allowed.json
-# only when the visitor's country is known AND isn't one that needs prior
-# consent for analytics cookies: the EEA, the UK and its Crown dependencies,
-# Switzerland, Türkiye and the EU's outlying regions. If GeoIP isn't working,
-# nobody is tracked (fails closed).
-GeoIPEnable On
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteCond %{ENV:GEOIP_COUNTRY_CODE} ^[A-Z]{2}$
-  RewriteCond %{ENV:GEOIP_COUNTRY_CODE} !^(AT|BE|BG|HR|CY|CZ|DK|EE|FI|FR|DE|GR|HU|IE|IT|LV|LT|LU|MT|NL|PL|PT|RO|SK|SI|ES|SE|IS|LI|NO|GB|GG|JE|IM|GI|CH|TR|AX|GF|GP|MQ|RE|YT|MF|BL|SJ|EU)$
-  RewriteRule ^ga-gate\.json$ ga-gate-allowed.json [L]
-</IfModule>
-# the answer depends on who's asking: never cache it (browsers or CDN)
-<IfModule mod_headers.c>
-  <FilesMatch "^ga-gate(-allowed)?\.json$">
-    Header set Cache-Control "private, no-store"
-  </FilesMatch>
-</IfModule>
