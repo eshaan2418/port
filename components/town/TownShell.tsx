@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { hasWebGL } from "@/lib/hooks";
 import { LEGACY_MODE_KEY } from "@/lib/mode";
+import { setSiteView, track } from "@/lib/analytics";
 import { Chooser } from "@/components/chooser/Chooser";
 import { useTown } from "./state";
 
@@ -71,6 +72,9 @@ export function TownShell({ list, projectImages }: { list: ReactNode; projectIma
     if (mode === "list") url.searchParams.set("view", "list");
     else url.searchParams.delete("view");
     window.history.replaceState(null, "", url);
+    // which version they're looking at (the chooser itself isn't an event)
+    setSiteView(mode === "town" ? "city" : mode === "list" ? "list" : "chooser");
+    if (mode !== "choose") track("view_mode", { site_view: mode === "town" ? "city" : "list" });
     document.documentElement.style.overflow = mode === "list" ? "" : "hidden";
     if (mode === "list") window.scrollTo(0, 0);
   }, [mode, decided]);

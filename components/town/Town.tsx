@@ -27,6 +27,7 @@ import { enterBuilding, leaveInterior } from "./interior/transitions";
 import { IntroDirector } from "./intro/IntroDirector";
 import { abortIntro, beginIntro, cameraDefaults, intro as introState, skipIntro } from "./intro/intro";
 import { COLLIDERS, FLY_CEILING } from "./world/layout";
+import { useCityAnalytics } from "./analytics";
 
 /** Phones / tablets get the light build: no shadows, dpr ≤ 1.5, fewer props. */
 function useLowDetail() {
@@ -37,6 +38,7 @@ function useLowDetail() {
 }
 
 export default function Town() {
+  useCityAnalytics();
   const lowDetail = useLowDetail();
   const active = useTown((s) => s.mode === "town");
   const setLoading = useTown((s) => s.setLoading);

@@ -24,6 +24,17 @@ NEXT_PUBLIC_SITE_URL=https://your-domain.com npm run build   # the domain makes 
 
 Then upload the **contents** of `dist/` (not the folder itself) into `public_html` with Hostinger's File Manager or FTP, keeping `.htaccess` (it's a hidden file; turn on "show hidden files"). Re-upload after every rebuild. Pages are folder-style (`/agent/` → `agent/index.html`), so no server rewrites are needed. Images are served as they are (static hosting has no image server). `npm run dev` keeps using `.next/`, so nothing from development ends up in `dist/`.
 
+## Analytics (GA4, no consent banner)
+
+Google Analytics 4 (`G-0JKP2C1CMB`) loads only where it's allowed without asking first, so there is no cookie banner. Everything is in `lib/analytics.ts`; `components/Analytics.tsx` (in the root layout) starts it once per page load. GA loads only if **all** of these pass, otherwise nothing from Google loads at all (no script, no cookies, no cookieless pings):
+
+1. production build on a real domain (never `npm run dev` or localhost);
+2. `/ga-gate.json` says `{"analytics": true}`. It ships saying `false`; on Hostinger, `public/.htaccess` turns on GeoIP and serves `ga-gate-allowed.json` instead when the visitor's country is known and isn't on the consent-required list (EEA, UK + Crown dependencies, Switzerland, Türkiye, the EU's outlying regions). Edit that list in `.htaccess`. No GeoIP = nobody tracked;
+3. the device time zone isn't European (`CONSENT_TIME_ZONES`), a local check that catches VPNs; it's never sent anywhere;
+4. no Global Privacy Control / Do Not Track, and no `?analytics=off` opt-out (stored in localStorage; `?analytics=on` undoes it). Use `?analytics=off` on your own browsers so your visits aren't counted.
+
+Events (on top of GA's automatic page views, sessions, engagement, outbound `click`s and `file_download`s): `view_mode` (list / city), `section_view` (city building entered), `experience_view`, `project_view` (city gallery), `project_click` (a GitHub repo link), `social_click` (`platform`: linkedin / github), `contact_click` (`method`: email), `resume_download` (any résumé/CV PDF link, once one exists). Each carries `site_view` and, for links, `link_location`. No email addresses or other personal data are sent. **In GA4, "Page changes based on browser history events" must be off** (the site rewrites `?view=` in the URL, which would count a second page view).
+
 ## Where to edit content
 
 Everything lives in `/data`. No copy is hard-coded in components.

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, IBM_Plex_Mono, Manrope } from "next/font/google";
 import { site } from "@/data/site";
+import { Analytics } from "@/components/Analytics";
 import "./globals.css";
 
 // titles · UI text · clocks, years and labels
@@ -82,6 +83,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         {children}
         <div className="grain" aria-hidden="true" />
+        <Analytics />
       </body>
     </html>
   );
