@@ -18,9 +18,10 @@
  * GSAP walk (a 10 s straight walk across with a 0.25 s yoyo bob, each at a
  * random time scale of 0.5–1.5), depth sorting by anchor Y, recycling a
  * person once they've crossed, and devicePixelRatio handling.
- * Changed: the sheet is local (/public/crowd/peeps.png, not the CDN) and
- * flipped for black once into an offscreen canvas (white linework, black
- * fills); a set number of people walk at once (by width); people are small and scale a little with depth; the white
+ * Changed: the sheet is local and bundled (./peeps.png, served under a
+ * content-hashed name, not from the CDN) and cut once into one small image
+ * per person, each flipped for black (white linework, black fills), after a
+ * check that the sheet is the expected grid (else no crowd at all); a set number of people walk at once (by width); people are small and scale a little with depth; the white
  * linework dimmed to about 62% (baked into the sheet, so people stay opaque
  * and overlap properly); sized from its own box (ResizeObserver, debounced, with
  * a short fade); paused when the hero is out of view or the tab is hidden;
@@ -28,18 +29,21 @@
  */
 import { gsap } from "gsap";
 import * as React from "react";
+// imported, so the build gives it a content-hashed URL (/_next/static/media/peeps.<hash>.png): a stale cached
+// copy can never pair with a newer chunk
+import peeps from "./peeps.png";
 
-const SRC = "/crowd/peeps.png";
 const COLS = 15; // sprites across the sheet (the original calls this `rows`)
 const ROWS = 7; // sprites down the sheet
-const CELL_W = 240; // the sheet is 3600 × 2268
-const CELL_H = 324;
+/** the original sheet is 3600 × 2268 (240 × 324 cells); a host may serve it scaled, which is fine as long as
+ * the grid's shape survives: the cells are always measured from the decoded image itself */
+const SHEET_ASPECT = 3600 / 2268;
 /* the people are drawn opaque (so the ones in front hide the ones behind) with the dimming baked into the
    sheet: the white linework at 62% (#9e9e9e on black looks like white at 62% opacity) */
 const DIM = "#9e9e9e";
 
 type Peep = {
-  cell: number;
+  sprite: number;
   x: number;
   y: number;
   anchorY: number;
@@ -52,25 +56,90 @@ type Peep = {
 /** how many people walk at once, by the hero's width: 30–34 from 1280px, 16 on tablets, 9 on phones */
 const crowdSize = (w: number) => (w >= 1280 ? Math.round(Math.min(34, 30 + (w - 1280) / 160)) : w >= 600 ? 16 : 9);
 
-/** the sheet flipped for black: lines light and fills black (difference against white), then dimmed (multiply) */
-function flipSheet(img: HTMLImageElement, scale: number, tint: string) {
-  const c = document.createElement("canvas");
-  c.width = Math.round(img.naturalWidth * scale);
-  c.height = Math.round(img.naturalHeight * scale);
-  const g = c.getContext("2d")!;
-  g.imageSmoothingQuality = "high";
-  g.drawImage(img, 0, 0, c.width, c.height);
-  g.globalCompositeOperation = "difference";
-  g.fillStyle = "#fff";
-  g.fillRect(0, 0, c.width, c.height);
-  g.globalCompositeOperation = "multiply";
-  g.fillStyle = tint;
-  g.fillRect(0, 0, c.width, c.height);
-  // back to the sheet's own alpha (the fills above covered its transparent parts too)
-  g.globalCompositeOperation = "destination-in";
-  g.drawImage(img, 0, 0, c.width, c.height);
-  return c;
+type Sprites = { list: (ImageBitmap | HTMLCanvasElement)[]; aspect: number; scale: number };
+
+/**
+ * The sheet, checked and cut into one small image per person. The grid comes from the decoded image only
+ * (naturalWidth / COLS, naturalHeight / ROWS, cell edges rounded to whole pixels), each cell is copied into its
+ * own canvas at `scale` and flipped for black there (lines light, fills black: `difference` against white, then
+ * dimmed with `multiply`, then the cell's own alpha back with `destination-in`; compositing only, no
+ * `ctx.filter`). Drawing then never refers to the sheet again. Returns null, with one console warning, when the
+ * sheet doesn't look like the expected grid: no crowd is better than a garbled one.
+ */
+async function cutSprites(img: HTMLImageElement, scale: number): Promise<Sprites | null> {
+  const W = img.naturalWidth;
+  const H = img.naturalHeight;
+  const cw = W / COLS;
+  const ch = H / ROWS;
+  const problems: string[] = [];
+  if (!W || !H) problems.push("the image has no size");
+  if (Math.abs(W / H / SHEET_ASPECT - 1) > 0.02) problems.push(`aspect ${(W / H).toFixed(3)}, expected ${SHEET_ASPECT.toFixed(3)}`);
+  if (W % COLS > COLS / 2 && COLS - (W % COLS) > COLS / 2) problems.push(`width ${W} isn't close to a multiple of ${COLS}`);
+  if (H % ROWS > ROWS / 2 && ROWS - (H % ROWS) > ROWS / 2) problems.push(`height ${H} isn't close to a multiple of ${ROWS}`);
+  if (cw < 40 || ch < 54) problems.push(`cells of ${cw.toFixed(1)} × ${ch.toFixed(1)} are too small`);
+  if (problems.length) {
+    console.warn(`[hero crowd] not drawn: the sprite sheet (${W} × ${H}) failed its check: ${problems.join("; ")}`);
+    return null;
+  }
+  const edge = (i: number, step: number) => Math.round(i * step);
+  const aspect = (edge(1, cw) - edge(0, cw)) / (edge(1, ch) - edge(0, ch));
+  const list: (ImageBitmap | HTMLCanvasElement)[] = [];
+  let blank = 0;
+  for (let k = 0; k < COLS * ROWS; k++) {
+    const c0 = k % COLS;
+    const r0 = (k / COLS) | 0;
+    const sx = edge(c0, cw);
+    const sy = edge(r0, ch);
+    const sw = edge(c0 + 1, cw) - sx;
+    const sh = edge(r0 + 1, ch) - sy;
+    if (Math.abs(sw / sh / aspect - 1) > 0.05) {
+      console.warn(`[hero crowd] not drawn: cell ${k} is ${sw} × ${sh}, unlike the first cell's shape`);
+      return null;
+    }
+    const c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(sw * scale));
+    c.height = Math.max(1, Math.round(sh * scale));
+    const g = c.getContext("2d", { willReadFrequently: k === 0 })!;
+    g.imageSmoothingQuality = "high";
+    g.drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
+    g.globalCompositeOperation = "difference";
+    g.fillStyle = "#fff";
+    g.fillRect(0, 0, c.width, c.height);
+    g.globalCompositeOperation = "multiply";
+    g.fillStyle = DIM;
+    g.fillRect(0, 0, c.width, c.height);
+    g.globalCompositeOperation = "destination-in";
+    g.drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
+    // some ink in it? (sample a coarse grid of alpha)
+    const a = g.getImageData(0, 0, c.width, c.height).data;
+    let ink = 0;
+    for (let i = 3; i < a.length; i += 4 * 7) if (a[i] > 32) ink++;
+    if (ink < 20) blank++;
+    list.push(c);
+  }
+  if (blank > 0) {
+    console.warn(`[hero crowd] not drawn: ${blank} of the ${COLS * ROWS} cells came out empty`);
+    return null;
+  }
+  // GPU-friendly bitmaps where the browser has them (the canvases otherwise)
+  if (typeof createImageBitmap === "function") {
+    try {
+      const bitmaps = await Promise.all(list.map((c) => createImageBitmap(c as HTMLCanvasElement)));
+      for (const c of list) (c as HTMLCanvasElement).width = 0;
+      return { list: bitmaps, aspect, scale };
+    } catch {
+      /* keep the canvases */
+    }
+  }
+  return { list, aspect, scale };
 }
+
+const freeSprites = (s: Sprites | null) => {
+  for (const b of s?.list ?? []) {
+    if ("close" in b) b.close();
+    else b.width = b.height = 0;
+  }
+};
 
 export default function HeroCrowd() {
   const ref = React.useRef<HTMLCanvasElement>(null);
@@ -83,7 +152,7 @@ export default function HeroCrowd() {
 
     let dead = false;
     let img: HTMLImageElement | null = null;
-    const sheets: { white: HTMLCanvasElement | null; scale: number } = { white: null, scale: 0 };
+    let sprites: Sprites | null = null;
     const stage = { w: 0, h: 0, dpr: 1 };
     const all: Peep[] = [];
     const available: Peep[] = [];
@@ -100,13 +169,20 @@ export default function HeroCrowd() {
     /** the base sprite height: about 11% of the hero (9% on phones), front people up to 15% larger */
     const baseH = () => (hero as HTMLElement).clientHeight * (stage.w < 600 ? 0.09 : 0.11);
 
-    const ensureSheets = () => {
-      if (!img) return;
-      // the sheet at about the resolution the people are drawn at (never above the original, at most 3 MP)
-      const want = Math.min(1, Math.max(0.3, (baseH() * 1.15 * stage.dpr) / CELL_H), Math.sqrt(3e6 / (img.naturalWidth * img.naturalHeight)));
-      if (sheets.white && want <= sheets.scale * 1.25 && want >= sheets.scale * 0.6) return;
-      sheets.scale = want;
-      sheets.white = flipSheet(img, want, DIM);
+    /** the sprites at about the resolution the people are drawn at (never above the sheet's own); false if the sheet failed its check */
+    const ensureSprites = async () => {
+      if (!img) return false;
+      const want = Math.min(1, Math.max(0.2, (baseH() * 1.15 * stage.dpr) / (img.naturalHeight / ROWS)));
+      if (sprites && want <= sprites.scale * 1.25 && want >= sprites.scale * 0.6) return true;
+      const next = await cutSprites(img, want);
+      if (dead) {
+        freeSprites(next);
+        return false;
+      }
+      if (!next) return false;
+      freeSprites(sprites);
+      sprites = next;
+      return true;
     };
 
     const reset = (p: Peep) => {
@@ -114,7 +190,7 @@ export default function HeroCrowd() {
       const depth = powerIn(Math.random()); // 0 = front (low, larger), 1 = back (high, smaller)
       const s = 1.15 - 0.35 * depth;
       p.h = baseH() * s;
-      p.w = (p.h * CELL_W) / CELL_H;
+      p.w = p.h * (sprites?.aspect ?? 240 / 324);
       // the back rows stay below the two hero words (descenders included): the busiest part is the bottom of the hero
       const startY = stage.h - p.h + p.h * 0.3 - depth * stage.h * 0.4;
       const startX = dir === 1 ? -p.w : stage.w + p.w;
@@ -155,17 +231,21 @@ export default function HeroCrowd() {
       available.push(p);
     };
 
+    // the one place the device pixel ratio is applied: the backing store (in build) and this base transform;
+    // everything else is in CSS pixels
     const render = () => {
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const sc = sheets.scale;
-      const cw = CELL_W * sc;
-      const ch = CELL_H * sc;
-      const sheet = sheets.white;
-      if (!sheet) return;
+      ctx.setTransform(stage.dpr, 0, 0, stage.dpr, 0, 0);
+      ctx.clearRect(0, 0, stage.w, stage.h);
+      const list = sprites?.list;
+      if (!list) return;
       for (const p of crowd) {
-        ctx.setTransform(p.scaleX * stage.dpr, 0, 0, stage.dpr, p.x * stage.dpr, p.y * stage.dpr);
-        ctx.drawImage(sheet, (p.cell % COLS) * cw, ((p.cell / COLS) | 0) * ch, cw, ch, 0, 0, p.w, p.h);
+        const sprite = list[p.sprite];
+        if (!sprite) continue;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.scale(p.scaleX, 1);
+        ctx.drawImage(sprite, 0, 0, p.w, p.h);
+        ctx.restore();
       }
     };
 
@@ -181,32 +261,34 @@ export default function HeroCrowd() {
       else gsap.ticker.remove(render);
     };
 
-    const build = () => {
+    const build = async () => {
       stage.w = canvas.clientWidth;
       stage.h = canvas.clientHeight;
       stage.dpr = Math.min(2, window.devicePixelRatio || 1);
+      if (!(await ensureSprites()) || dead) return false;
       canvas.width = Math.round(stage.w * stage.dpr);
       canvas.height = Math.round(stage.h * stage.dpr);
-      ensureSheets();
       for (const p of [...crowd]) remove(p);
       available.length = 0;
       available.push(...all);
       const n = crowdSize(stage.w);
       for (let i = 0; i < n; i++) add()?.walk?.progress(Math.random());
       render();
+      return true;
     };
 
     const start = async () => {
       img = new Image();
-      img.src = SRC;
+      img.src = typeof peeps === "string" ? peeps : peeps.src;
       try {
         await img.decode();
       } catch {
+        console.warn("[hero crowd] not drawn: the sprite sheet didn't load or decode");
         return;
       }
       if (dead) return;
-      for (let i = 0; i < COLS * ROWS; i++) all.push({ cell: i, x: 0, y: 0, anchorY: 0, w: 0, h: 0, scaleX: 1, walk: null });
-      build();
+      for (let i = 0; i < COLS * ROWS; i++) all.push({ sprite: i, x: 0, y: 0, anchorY: 0, w: 0, h: 0, scaleX: 1, walk: null });
+      if (!(await build()) || dead) return;
       play(true);
       // fade in (CSS, 1.2 s)
       requestAnimationFrame(() => !dead && canvas.setAttribute("data-on", ""));
@@ -228,10 +310,9 @@ export default function HeroCrowd() {
       rebuildT = window.setTimeout(() => {
         canvas.removeAttribute("data-on");
         clearTimeout(fadeT);
-        fadeT = window.setTimeout(() => {
+        fadeT = window.setTimeout(async () => {
           if (dead) return;
-          build();
-          canvas.setAttribute("data-on", "");
+          if (await build()) canvas.setAttribute("data-on", "");
         }, 160);
       }, 200);
     });
@@ -261,8 +342,8 @@ export default function HeroCrowd() {
       gsap.ticker.remove(render);
       for (const p of all) p.walk?.kill();
       crowd.length = available.length = all.length = 0;
-      if (sheets.white) sheets.white.width = sheets.white.height = 0;
-      sheets.white = null;
+      freeSprites(sprites);
+      sprites = null;
       canvas.width = canvas.height = 0;
       img = null;
     };
