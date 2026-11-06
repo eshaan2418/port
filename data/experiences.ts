@@ -136,7 +136,6 @@ export const experiences: Experience[] = [
   {
     // not in the latest source: title, company and year only
     id: "aiesec",
-    hideOnWebsite: true, // not on the normal website (still in the 3D tower and the agent files)
     role: "VP of Technology",
     company: "AIESEC",
     org: "AIESEC",

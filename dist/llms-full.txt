@@ -194,7 +194,7 @@ Algorithmic trading experiments.
 
 ## Extracurriculars
 
-- hall of records: world champion, martial arts; Guinness World Records holder
+- hall of records: world champion, martial arts; Limca Book of Records holder
 - dojo: martial arts; world champion
 - the rink: speed inline roller skater; loves ice skating
 - brain gym: ICPC; competitive programming; math

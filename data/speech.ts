@@ -44,7 +44,7 @@ export const speech: SpeechLine[] = [
   { id: "proj-hall", text: "this is the projects gallery. pick a frame to take a closer look.", approved: false },
 
   // Extracurriculars Tower
-  { id: "extra-records", text: "world champion in martial arts, and a guinness world records holder.", approved: false },
+  { id: "extra-records", text: "world champion in martial arts, and a limca book of records holder.", approved: false },
   { id: "extra-dojo", text: "this is the dojo. martial arts is where i became a world champion.", approved: false },
   { id: "extra-rink", text: "i'm a speed inline roller skater, and i love ice skating too.", approved: false },
   { id: "extra-brain", text: "icpc, competitive programming and math. this is where i train my brain.", approved: false },
