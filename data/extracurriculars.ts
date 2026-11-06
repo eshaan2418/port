@@ -12,7 +12,7 @@ export type Extracurricular = {
 };
 
 export const extracurriculars: Extracurricular[] = [
-  { id: "records", label: "hall of records", facts: ["world champion, martial arts", "Guinness World Records holder"], link: "" }, // add a source link here later
+  { id: "records", label: "hall of records", facts: ["world champion, martial arts", "Limca Book of Records holder"], link: "" }, // add a source link here later
   { id: "dojo", label: "dojo", facts: ["martial arts", "world champion"] },
   { id: "rink", label: "the rink", facts: ["speed inline roller skater", "loves ice skating"] },
   { id: "brain", label: "brain gym", facts: ["ICPC", "competitive programming", "math"] },
@@ -27,7 +27,7 @@ export const extracurriculars: Extracurricular[] = [
 /** the short list for the normal website's extracurriculars card (exactly these facts) */
 export const extracurricularHighlights = [
   "world champion in martial arts",
-  "Guinness World Records holder",
+  "Limca Book of Records holder",
   "speed inline roller skater",
   "ice skating",
   "ICPC",

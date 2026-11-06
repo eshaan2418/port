@@ -1,0 +1,1093 @@
+/* ══ The normal website ("list mode"): white and red on black, all in Inter ══
+   Scoped to .site-view (the city and the chooser are untouched).
+
+   1. The hero poster: the CSS of "Waving Portfolio Landing" (Kedhareswer,
+      21st.dev), moved out of the runtime <style>, changed where marked
+      (the drawn glyphs became real Inter text), plus the link bar and cue.
+   2. The page below it. The whole palette is the one block at the top of 2.
+
+   Contrast (WCAG 2.x), measured: see the palette block. Red #E5262C is
+   only used for large type, fills, rules, shadows and accents; small red
+   text uses #FF4D4D. */
+
+/* ── 1 · the hero poster (from the component) ── */
+.wpl-root{position:relative;width:100%;height:100svh;min-height:520px;overflow:hidden;background:var(--wpl-paper);color:var(--wpl-ink);container-type:size;isolation:isolate;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.wpl-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.wpl-stage{position:absolute;inset:0}
+/* addition: the walking crowd (./HeroCrowd.tsx), behind everything in the hero, in its lower part; it fades in once ready */
+.wpl-crowd{position:absolute;left:0;right:0;bottom:0;width:100%;height:55%;z-index:1;pointer-events:none;opacity:0;transition:opacity .15s}
+.wpl-crowd[data-on]{opacity:1;transition:opacity 1.2s ease}
+/* changed: the poster is the whole stage (its viewBox is the stage in pixels; see layoutPoster) */
+.wpl-poster{position:absolute;left:0;top:0;width:100%;height:100%;max-width:none;overflow:visible;z-index:2}
+/* changed: the bubble's text is Inter, lowercase, white on the dark bubble */
+.wpl-label{font-family:var(--font-inter),ui-sans-serif,system-ui,sans-serif;font-weight:500;letter-spacing:-.01em}
+.wpl-bubble-text{fill:var(--wpl-ink);font-size:26px}
+/* changed: the word is real text; each letter is a window onto a vertical reel that rolls in and lands */
+.wpl-word{position:absolute;z-index:2;display:flex;margin:0;font-family:var(--font-inter),ui-sans-serif,system-ui,sans-serif;font-weight:500;font-size:100px;line-height:1;letter-spacing:-.04em;color:var(--wpl-ink);white-space:nowrap}
+.hl{position:relative;display:block;height:1em;clip-path:inset(0 -.35em)}
+.hl-sizer{display:block;visibility:hidden}
+.hl-reel{position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column;text-align:center}
+.hl-reel>span{display:block;height:1em;line-height:1}
+.hl-reel.is-rolling{animation:hl-roll var(--dur,1s) var(--delay,0s) both}
+.wpl-par-letters{transform:translate(calc(var(--wpl-mx,0) * -14px),calc(var(--wpl-my,0) * -8px));transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.wpl-par-char{transform:translate(calc(var(--wpl-mx,0) * 9px),0px);transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.wpl-draw{stroke-dasharray:1;stroke-dashoffset:0}
+.wpl-cell{cursor:crosshair}
+.wpl-char{cursor:pointer;outline:none}
+.wpl-char:focus-visible .wpl-head{filter:drop-shadow(0 0 6px var(--wpl-accent))}
+.wpl-tilt{transform-box:view-box;transform-origin:205px 600px;transform:rotate(-7deg)}
+.wpl-breathe{transform-box:view-box;transform-origin:205px 600px;animation:wpl-breathe 3.8s ease-in-out infinite}
+.wpl-uarm{transform-box:view-box;transform-origin:288px 248px}
+.wpl-farm{transform-box:view-box;transform-origin:348px 346px}
+.wpl-hand{transform-box:view-box;transform-origin:392px 216px}
+.wpl-head{transform-box:view-box;transform-origin:203px 200px;transform:rotate(-4deg)}
+.wpl-look{transform-box:view-box;transform-origin:203px 200px;transform:rotate(calc(var(--wpl-hr,0) * 1deg));transition:transform .4s ease-out}
+.wpl-pupils{transform:translate(calc(var(--wpl-ex,0) * 1px),calc(var(--wpl-ey,0) * 1px));transition:transform .2s ease-out}
+.wpl-eyes{transform-box:fill-box;transform-origin:center;animation:wpl-blink 5.2s 7.5s infinite}
+.wpl-brows{transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+.wpl-happy,.wpl-grin{opacity:0}
+.wpl-bubble{transform-box:fill-box;transform-origin:0% 100%;animation:wpl-pop .45s cubic-bezier(.3,1.6,.5,1) both}
+.wpl-root[data-intro="done"] .wpl-hand{animation:wpl-wiggle 6.5s 1.5s infinite}
+
+.wpl-root[data-intro="on"] .wpl-poster{animation:wpl-thump .5s 2.5s both}
+
+.wpl-root[data-intro="on"] .wpl-draw{animation:wpl-draw .9s cubic-bezier(.6,0,.2,1) both}
+.wpl-root[data-intro="on"] .wpl-rise{animation:wpl-rise .95s 3.4s cubic-bezier(.2,1.2,.35,1) both}
+.wpl-root[data-intro="on"] .wpl-tilt{animation:wpl-tilt .8s 6s cubic-bezier(.3,1.5,.5,1) both}
+.wpl-root[data-intro="on"] .wpl-uarm{animation:wpl-uarm .6s 4.3s cubic-bezier(.3,1.3,.5,1) both}
+.wpl-root[data-intro="on"] .wpl-farm{animation:wpl-farm .62s 4.3s cubic-bezier(.3,1.3,.5,1) both}
+.wpl-root[data-intro="on"] .wpl-head{animation:wpl-headin 1.3s 3.5s ease-out both}
+
+.wpl-char.is-waving .wpl-farm{animation:wpl-wave 1.5s ease-in-out}
+.wpl-char.is-waving .wpl-hand{animation:wpl-hand 1.5s ease-in-out}
+.wpl-char.is-waving .wpl-head{animation:wpl-nod 1.5s ease-in-out}
+.wpl-char.is-waving .wpl-brows{transform:translateY(-6px)}
+.wpl-char.is-waving .wpl-eyes,.wpl-char.is-waving .wpl-smile{opacity:0}
+.wpl-char.is-waving .wpl-happy,.wpl-char.is-waving .wpl-grin{opacity:1}
+
+
+.wpl-storm{position:absolute;inset:-25% -15%;display:flex;flex-direction:column;justify-content:center;gap:2.2cqh;transform:rotate(-7deg);pointer-events:none;z-index:3}
+.wpl-srow{height:15cqh;flex:none;overflow:visible;animation:wpl-row-in .6s cubic-bezier(.2,.9,.2,1) both,wpl-shutter .45s cubic-bezier(.7,0,.3,1) forwards}
+.wpl-srow[data-dir="r"]{animation-name:wpl-row-in-r,wpl-shutter}
+/* changed: the storm's rows are lowercase Inter text, white, hollow or red */
+.wpl-strip{display:flex;align-items:center;width:max-content;height:100%;font-family:var(--font-inter),ui-sans-serif,system-ui,sans-serif;font-weight:600;font-size:13cqh;line-height:1;letter-spacing:-.03em;white-space:nowrap;animation:wpl-marq 5s linear infinite;will-change:transform}
+.wpl-strip>span{padding-right:.3em}
+.wpl-strip[data-dir="r"]{animation-name:wpl-marq-r}
+.wpl-strip[data-tone="0"]{color:#fff}
+.wpl-strip[data-tone="1"]{color:transparent;-webkit-text-stroke:2px rgba(255,255,255,.55)}
+.wpl-strip[data-tone="2"]{color:var(--wpl-accent)}
+
+
+
+.wpl-burst{position:absolute;width:0;height:0;pointer-events:none;z-index:6}
+/* changed: thrown bits are lowercase letters */
+.wpl-bit{position:absolute;left:-.3em;top:-.5em;font-family:var(--font-inter),ui-sans-serif,system-ui,sans-serif;font-weight:600;font-size:32px;line-height:1;color:#fff;animation:wpl-bit .95s cubic-bezier(.15,.7,.3,1) forwards}
+.wpl-bit[data-tone="1"]{color:var(--wpl-accent)}
+.wpl-bit[data-tone="2"]{color:#a1a1a1}
+
+
+
+@keyframes hl-roll{
+0%{transform:translateY(calc(var(--n) * -1em));opacity:0;animation-timing-function:cubic-bezier(.5,0,.25,1)}
+6%{opacity:1}
+82%{transform:translateY(.06em);opacity:1;animation-timing-function:ease-in-out}
+100%{transform:translateY(0);opacity:1}
+}
+@keyframes wpl-thump{0%{transform:none}30%{transform:translateY(7px) scale(1.012)}60%{transform:translateY(-3px)}100%{transform:none}}
+@keyframes wpl-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes wpl-rise{from{transform:translateY(640px)}to{transform:translateY(0px)}}
+@keyframes wpl-tilt{from{transform:rotate(0deg)}to{transform:rotate(-7deg)}}
+@keyframes wpl-uarm{from{transform:rotate(26deg)}to{transform:rotate(0deg)}}
+@keyframes wpl-farm{from{transform:rotate(150deg)}to{transform:rotate(0deg)}}
+@keyframes wpl-headin{0%{transform:rotate(9deg)}55%{transform:rotate(-8deg)}100%{transform:rotate(-4deg)}}
+@keyframes wpl-wave{0%{transform:rotate(0deg)}15%{transform:rotate(-17deg)}32%{transform:rotate(12deg)}50%{transform:rotate(-17deg)}68%{transform:rotate(12deg)}84%{transform:rotate(-7deg)}100%{transform:rotate(0deg)}}
+@keyframes wpl-hand{0%{transform:rotate(0deg)}15%{transform:rotate(-10deg)}32%{transform:rotate(10deg)}50%{transform:rotate(-10deg)}68%{transform:rotate(10deg)}84%{transform:rotate(-5deg)}100%{transform:rotate(0deg)}}
+@keyframes wpl-nod{0%{transform:rotate(-4deg)}25%{transform:rotate(-9deg)}55%{transform:rotate(-1deg)}80%{transform:rotate(-6deg)}100%{transform:rotate(-4deg)}}
+@keyframes wpl-wiggle{0%,86%,100%{transform:rotate(0deg)}90%{transform:rotate(-9deg)}94%{transform:rotate(7deg)}97%{transform:rotate(-3deg)}}
+@keyframes wpl-breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.008,1.012)}}
+@keyframes wpl-blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+@keyframes wpl-pop{from{transform:scale(0) rotate(-8deg);opacity:0}to{transform:scale(1) rotate(0deg);opacity:1}}
+@keyframes wpl-row-in{from{transform:translateX(35%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes wpl-row-in-r{from{transform:translateX(-35%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes wpl-shutter{from{transform:scaleY(1);opacity:1}to{transform:scaleY(0);opacity:0}}
+@keyframes wpl-marq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes wpl-marq-r{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+@keyframes wpl-bit{from{transform:translate(0,0) rotate(0deg) scale(.4);opacity:1}to{transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(1);opacity:0}}
+
+@media (prefers-reduced-motion:reduce){
+.wpl-root *,.wpl-root *::before,.wpl-root *::after{animation:none!important;transition:none!important}
+}
+
+/* addition: with JS (the pre-paint script marks <html>), the word and the character wait for the stage's real size,
+   so they never paint at the server's guessed layout and then jump */
+html[data-initial-view] .wpl-root:not([data-sized]) :is(.wpl-word, .wpl-par-char){visibility:hidden}
+/* additions: the scroll cue */
+.wpl-cue{position:absolute;left:clamp(16px,5cqw,64px);bottom:clamp(12px,4cqh,44px);width:30px;height:48px;z-index:4;color:var(--wpl-ink)}
+.wpl-cue svg{display:block;width:100%;height:100%;overflow:visible}
+.wpl-root[data-intro="done"] .wpl-cue svg{animation:wpl-bob 2.4s ease-in-out infinite}
+.wpl-root[data-intro="on"] .wpl-cue .wpl-draw{animation-delay:3.4s}
+@keyframes wpl-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+
+/* ── 2 · the page ── */
+/* The palette: every colour list mode uses. Contrast (WCAG 2.x), measured
+   (relative luminance, WCAG 2.x formula):
+     fg #FFFFFF on bg #000000 ................ 21.0 : 1   all body text
+     fg on surface #0F0F0F ................... 19.2 : 1
+     fg2 #A1A1A1 on bg ....................... 8.1 : 1    dates, descriptions, footer
+     fg2 on surface .......................... 7.4 : 1
+     accent-text #FF4D4D on bg ............... 6.4 : 1    small red (chip icons, arrow hover); 5.9 on surface
+     fg on accent #E5262C (buttons) .......... 4.5 : 1    AA for normal text (and the buttons are 19px+ semibold)
+     accent on bg ............................ 4.7 : 1    large type, fills and shapes only (4.2 on surface) */
+.site-view {
+  --bg: #000000;
+  --fg: #ffffff;
+  --fg2: #a1a1a1;
+  --line: rgba(255, 255, 255, 0.14);
+  --line2: rgba(255, 255, 255, 0.28);
+  --surface: #0f0f0f;
+  --accent: #e5262c;
+  --accent-text: #ff4d4d;
+  --nav-h: 64px;
+  /* the one page margin: the nav's edges, the headings and the content all sit on it */
+  --pm: clamp(16px, 2.5vw, 40px);
+  color-scheme: dark;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+}
+/* the page behind the page is black while this view shows, and from the first paint when it will */
+html:has([data-list-shell]:not(.sr-only) .site-view),
+html:has([data-list-shell]:not(.sr-only) .site-view) body,
+html[data-initial-view="list"]:has([data-list-shell][data-pending] .site-view),
+html[data-initial-view="list"]:has([data-list-shell][data-pending] .site-view) body {
+  background: #000;
+  color-scheme: dark;
+}
+.site-view ::selection {
+  background: var(--accent);
+  color: #fff;
+}
+.site-view a {
+  color: inherit;
+}
+/* focus: a white ring with an offset */
+.site-view :focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 4px;
+}
+.wpl-char:focus-visible {
+  outline: none;
+}
+
+/* switch mode (in the hero's link bar) and the fallback notice */
+.sv-switch {
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--fg);
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+}
+.sv-switch:hover {
+  transform: translate(-2px, -2px);
+  border-color: var(--fg);
+  box-shadow: 3px 3px 0 var(--accent);
+}
+.sv-notice {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  z-index: 60;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+  transform: translateX(-50%);
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--line2);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 4px 4px 0 var(--accent);
+  font-size: 14px;
+  color: var(--fg);
+}
+.sv-link-btn {
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* the top nav (components/site/SiteNav.tsx): sticky, laid over the hero
+   (the negative margin cancels its height), transparent there and solid
+   black with a hairline from 8px of scroll. The bar lets clicks through;
+   only its links and buttons take them. */
+.sn-skip {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  z-index: 70;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--fg);
+  border-radius: 999px;
+  background: var(--bg);
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+.sn-skip:focus-visible,
+.sn-skip:focus {
+  transform: none;
+}
+.sn {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--nav-h);
+  margin-bottom: calc(-1 * var(--nav-h));
+  border-bottom: 1px solid transparent;
+  pointer-events: none;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+.sn[data-solid] {
+  background: var(--bg);
+  border-bottom-color: var(--line);
+}
+.sn-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  height: 100%;
+  padding: 0 var(--pm);
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.sn ul {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sn-sections {
+  gap: clamp(1rem, 2vw, 1.75rem);
+}
+.sn-outs {
+  gap: clamp(1rem, 1.8vw, 1.5rem);
+  margin-left: auto !important;
+  padding-left: clamp(1rem, 2vw, 1.75rem) !important;
+  border-left: 1px solid var(--line);
+}
+.sn a,
+.sn button {
+  pointer-events: auto;
+}
+.sn-link,
+.sn-out {
+  display: inline-block;
+  padding: 0.35rem 0;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+  transition: color 0.2s, text-decoration-color 0.2s;
+}
+.sn-link {
+  color: var(--fg2) !important;
+}
+.sn-link:hover,
+.sn-out:hover {
+  color: var(--fg) !important;
+}
+.sn-link[aria-current] {
+  color: var(--fg) !important;
+  text-decoration-color: var(--accent);
+}
+.sn-out:hover {
+  text-decoration-color: var(--line2);
+}
+.sn-menu {
+  display: none;
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  min-height: 44px;
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  background: var(--bg);
+  font: inherit;
+  color: var(--fg);
+  cursor: pointer;
+}
+.sn-menu[aria-expanded="true"] {
+  border-color: var(--fg);
+}
+.sn-sheet {
+  pointer-events: auto;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+  padding: 0.5rem var(--pm) 1.25rem;
+}
+.sn-sheet[hidden] {
+  display: none;
+}
+.sn-sheet ul {
+  flex-direction: column;
+  align-items: stretch;
+}
+.sn-sheet li + li {
+  border-top: 1px solid var(--line);
+}
+.sn-sheet .sn-link,
+.sn-sheet .sn-out {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  font-size: 18px;
+}
+.sn-sheet .sn-switch {
+  padding-top: 1rem;
+}
+.sn-sheet .sv-switch {
+  min-height: 48px;
+  padding-inline: 1.25rem;
+  font-size: 16px;
+}
+@media (max-width: 799.98px) {
+  .site-view {
+    --nav-h: 56px;
+  }
+  .sn-bar > ul {
+    display: none;
+  }
+  .sn-menu {
+    display: block;
+  }
+}
+@media (min-width: 800px) {
+  .sn-sheet {
+    display: none;
+  }
+}
+
+/* the content: full width less the page margin, on the nav's grid */
+.pg {
+  margin: 0;
+  padding: 0 var(--pm);
+}
+.pg-sec {
+  padding-top: clamp(48px, 6vw, 88px);
+  scroll-margin-top: var(--nav-h); /* the sticky nav's height */
+}
+.pg:focus,
+.pg-sec:focus {
+  outline: none;
+}
+
+/* section headings: big Inter, sentence case */
+.sh {
+  margin: 0;
+  font-size: clamp(2rem, 3.6vw, 3.25rem);
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  color: var(--fg);
+}
+/* the heading row: the heading, and its hint right-aligned on the same baseline (under it on narrow screens) */
+.sh-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1.5rem;
+  margin-bottom: clamp(16px, 2vw, 28px);
+}
+.sh-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.4;
+  color: var(--fg2);
+}
+.sh-hint svg {
+  flex: none;
+  width: 1.05em;
+  height: 1.05em;
+}
+/* the touch wording shows on touch screens, the pointer wording elsewhere (both are in the HTML) */
+.sh-hint-touch {
+  display: none;
+}
+@media (hover: none) and (pointer: coarse) {
+  .sh-hint-touch {
+    display: inline-flex;
+  }
+  .sh-hint-mouse {
+    display: none;
+  }
+}
+@media (max-width: 639.98px) {
+  .sh-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* experience: lanyard badges on a rail (components/site/LanyardRail.tsx). The
+   component's theme tokens are scoped variables, defined here and nowhere
+   else, so no other page, mode or component changes colour.
+   On the card #0F0F0F: white 19.2 : 1, muted #A1A1A1 7.4 : 1. The lanyards
+   and badge bands cycle through six colours; nothing small is coloured. */
+.ex-lanyard {
+  --lyr-background: #000000; /* the punched holes and the carousel's edge fades */
+  --lyr-foreground: #ffffff;
+  --lyr-card: #0f0f0f;
+  --lyr-card-foreground: #ffffff;
+  --lyr-border: rgba(255, 255, 255, 0.14);
+  --lyr-muted: #1c1c1c;
+  --lyr-muted-foreground: #a1a1a1;
+  --lyr-ring: #ffffff;
+  /* the lanyards and badge bands, one colour per badge in turn (decorative only: no text sits on them);
+     chart-1 is also the link underline on the badge backs */
+  --lyr-chart-1: #e5262c; /* red */
+  --lyr-chart-2: #ff7a1a; /* orange */
+  --lyr-chart-3: #f6c21c; /* yellow */
+  --lyr-chart-4: #22b573; /* green */
+  --lyr-chart-5: #2f80ff; /* blue */
+  --lyr-chart-6: #9b5cff; /* violet */
+  --lyr-hi: #6f6f6f; /* the rail's highlight, dimmed for black */
+  --lyr-shadow: #000000;
+  font-variant-numeric: tabular-nums; /* the dates line up */
+  /* the rail spans the content width, inside the page margins; above what follows, so a flipped badge can enlarge over it */
+  position: relative;
+  z-index: 3;
+}
+/* phones: the carousel runs edge to edge so the neighbours peek in from the screen's edges */
+@media (max-width: 639.98px) {
+  .ex-lanyard {
+    margin-inline: calc(-1 * var(--pm));
+  }
+}
+.ex-rails-pair {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.5rem, 2vh, 1.5rem);
+}
+
+/* projects: the curved row (components/site/ProjectRow.tsx), edge to edge.
+   The card back: white on #0F0F0F (19.2 : 1) with a white border and a red
+   offset shadow; the caret and the link underline are red. */
+.pr-wrap {
+  position: relative;
+  /* edge to edge, past the page margins */
+  margin-inline: calc(-1 * var(--pm));
+}
+.pr {
+  position: relative;
+  /* about as tall as the curved band itself: no empty bands above and below the tiles */
+  height: clamp(260px, 24vw, 380px);
+  overflow: hidden;
+}
+@media (max-width: 639.98px) {
+  .pr {
+    height: clamp(200px, 56vw, 260px);
+  }
+}
+.pr-band {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.5s;
+}
+.pr-tile {
+  position: absolute;
+  cursor: pointer;
+  transition: opacity 0.35s;
+}
+.pr[data-open] .pr-tile {
+  cursor: default;
+}
+/* the project's name under its tile: a flat label riding the curve with the tile */
+.pr-name {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-align: center;
+  color: var(--fg);
+  white-space: nowrap;
+  backface-visibility: hidden;
+  pointer-events: none;
+}
+.pr-slice {
+  position: absolute;
+  top: 0;
+  overflow: hidden;
+  background: var(--surface);
+}
+.pr-slice.pr-l {
+  border-radius: 8px 0 0 8px;
+}
+.pr-slice.pr-r {
+  border-radius: 0 8px 8px 0;
+}
+.pr-slice img {
+  position: absolute;
+  top: 0;
+  max-width: none;
+  object-fit: cover;
+  user-select: none;
+  pointer-events: none;
+}
+.pc-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+}
+.pc {
+  position: absolute;
+  z-index: 6;
+  transform-origin: 0 0;
+  perspective: 1400px;
+}
+.pc-flip {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+.pc-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.pc-front img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pc-back {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(0.7rem, 2.4cqh, 1.1rem);
+  padding: clamp(1.1rem, 4cqw, 2rem);
+  border: 1px solid var(--fg);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 8px 8px 0 var(--accent);
+  transform: rotateY(180deg);
+  overflow: auto;
+}
+.pc-name {
+  max-width: calc(100% - 3rem);
+  margin: 0;
+  font-size: clamp(1.9rem, 10cqh, 3.2rem);
+  font-weight: 500;
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+.pc-text {
+  max-width: 34ch;
+  margin: 0;
+  font-size: clamp(1.05rem, 4.8cqh, 1.5rem);
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--fg);
+}
+.pc-rest {
+  visibility: hidden;
+}
+.pc-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: var(--accent);
+}
+.pc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding: 0.5rem 0.95rem;
+  border: 1px solid var(--fg);
+  border-radius: 999px;
+  background: transparent;
+  font-weight: 600;
+  font-size: clamp(1rem, 3.4cqh, 1.2rem);
+  color: var(--fg);
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.pc-link:is(:hover, :focus-visible) {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--accent);
+}
+.pc-close {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+}
+.pc-close svg {
+  width: 16px;
+  height: 16px;
+}
+.pc-close:hover {
+  background: var(--fg);
+  color: var(--bg);
+}
+/* the project list: visually hidden until something in it has keyboard focus, then a strip under the row */
+.pr-list {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+  list-style: none;
+}
+.pr-list:focus-within {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.75rem;
+  z-index: 7;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.pr-list:focus-within li {
+  display: none;
+}
+.pr-list:focus-within li:focus-within {
+  display: block;
+  pointer-events: auto;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--fg);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 4px 4px 0 var(--accent);
+  white-space: normal;
+}
+.pr-list li p {
+  display: none;
+}
+.pr-list button,
+.pr-list a {
+  font-weight: 600;
+  color: var(--fg);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.pr-list li:focus-within button:not(:focus),
+.pr-list li:focus-within a:not(:focus) {
+  display: none;
+}
+
+/* education, extracurriculars, contact: bento grids (components/site/Bento.tsx).
+   The grid, gap and spans follow the "Features 8" block: 6 columns, full width
+   on small screens, halves from 640px, thirds / halves from 1024px.
+   Dark #0F0F0F cards with hairline borders and a red offset shadow on hover. */
+.bt-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.site-view .bt-card {
+  grid-column: 1 / -1;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--fg);
+  box-shadow: none;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s, border-color 0.25s;
+}
+.site-view .bt-card:is(:hover, :focus-within) {
+  transform: translateY(-2px);
+  border-color: var(--line2);
+  box-shadow: 5px 5px 0 var(--accent);
+}
+@media (min-width: 640px) {
+  .site-view .bt-sm3 {
+    grid-column: span 3;
+  }
+}
+@media (min-width: 1024px) {
+  .site-view .bt-lg2 {
+    grid-column: span 2;
+  }
+  .site-view .bt-lg3 {
+    grid-column: span 3;
+  }
+  .site-view .bt-lg-tall {
+    grid-row: span 2;
+  }
+}
+.bt-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+}
+.bt-center {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.bt-h {
+  margin: 0;
+  font-size: clamp(1.3rem, 2.2vw, 1.75rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.bt-p {
+  margin: 0.3rem 0 0;
+  font-size: 1.02rem;
+  line-height: 1.45;
+  color: var(--fg2);
+}
+.bt-strong {
+  font-weight: 500;
+  color: var(--fg);
+}
+.bt-lead {
+  color: var(--fg);
+  font-size: clamp(1.05rem, 1.5vw, 1.2rem);
+}
+/* the double-ring circle: a white logo tile inside a hairline ring */
+.bt-ring {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+}
+.bt-ring::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border: 1px solid var(--line2);
+  border-radius: 50%;
+}
+.bt-ring-lg {
+  width: 6.5rem;
+  height: 6.5rem;
+}
+.bt-ring-md {
+  width: 4.5rem;
+  height: 4.5rem;
+}
+.bt-ring img {
+  width: 62%;
+  height: 62%;
+  object-fit: contain;
+}
+.bt-degree {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem 1.75rem;
+}
+.bt-degree > div {
+  flex: 1 1 14rem;
+}
+.bt-aws {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem 1.5rem;
+}
+.bt-aws .bt-h {
+  flex: 1 1 12rem;
+}
+/* the big figure: plain big Inter, tabular figures */
+.bt-figure {
+  margin: 0.25rem 0;
+  font-size: clamp(3.4rem, 7vw, 4.8rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+.bt-closer {
+  margin: 0 0 0.5rem;
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  font-weight: 500;
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+}
+/* stamped labels: white-outline pills */
+.bt-stamp,
+.bt-stamped {
+  margin: 0;
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--fg);
+  border-radius: 1.4em;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.bt-stamp {
+  font-size: 0.95rem;
+}
+.bt-stamped {
+  font-size: clamp(1rem, 1.6vw, 1.15rem);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.bt-art {
+  width: clamp(5.5rem, 9vw, 7rem);
+  height: auto;
+}
+/* the ICPC card: the big one */
+.bt-icpc {
+  justify-content: center;
+  gap: 1.1rem;
+  min-height: 16rem;
+}
+.bt-icpc-h {
+  margin: 0;
+  font-size: clamp(4.5rem, 9vw, 7rem);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+  color: var(--fg);
+}
+.bt-icpc-sub {
+  margin: 0;
+  font-size: clamp(1.3rem, 2.2vw, 1.75rem);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+/* chips that lift on hover (or press) */
+.bt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  gap: 0.75rem;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bt-chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.95rem;
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  background: var(--bg);
+  font-weight: 500;
+  font-size: clamp(1rem, 1.5vw, 1.1rem);
+  transition: transform 0.2s cubic-bezier(0.3, 1.6, 0.5, 1), box-shadow 0.2s, border-color 0.2s;
+}
+.bt-chips li svg {
+  flex: none;
+  color: var(--accent-text);
+}
+.bt-chips li:is(:hover, :active) {
+  transform: translateY(-3px);
+  border-color: var(--fg);
+  box-shadow: 3px 3px 0 var(--accent);
+}
+/* buttons: red with white text; the ICPC one is a white outline */
+.bt-message {
+  align-items: flex-start;
+}
+.bt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: auto;
+  padding: 0.8rem 1.4rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent);
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #fff !important;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.bt-btn:is(:hover, :focus-visible, :active) {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--fg);
+}
+.site-view .bt-btn.bt-btn-ink {
+  margin-top: 0.5rem;
+  align-self: flex-start;
+  border-color: var(--fg);
+  background: transparent;
+  font-size: clamp(1.05rem, 1.5vw, 1.2rem);
+}
+.site-view .bt-btn.bt-btn-ink:is(:hover, :focus-visible, :active) {
+  box-shadow: 4px 4px 0 var(--accent);
+}
+/* the links card */
+.bt-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bt-links a {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 3.4rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  font-size: 1.15rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+.bt-links a:is(:hover, :focus-visible, :active) {
+  transform: translate(-2px, -2px);
+  border-color: var(--fg);
+  box-shadow: 4px 4px 0 var(--accent);
+}
+.bt-arrow {
+  margin-left: auto;
+  transition: transform 0.2s;
+}
+.bt-links a:hover .bt-arrow {
+  transform: translateX(3px);
+  color: var(--accent-text);
+}
+.bt-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg2);
+}
+.bt-foot p {
+  margin: 0;
+}
+.bt-die {
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  transform: rotate(-8deg);
+  transition: transform 0.6s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.bt-card:hover .bt-die {
+  transform: rotate(352deg);
+}
+/* education and extracurriculars: smaller type inside their cards (about a fifth down; contact keeps its sizes) */
+:is(#education, #extracurriculars) .bt-h {
+  font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+}
+:is(#education, #extracurriculars) .bt-p {
+  font-size: 0.9rem;
+}
+:is(#education, #extracurriculars) .bt-figure {
+  font-size: clamp(2.4rem, 4.6vw, 3.4rem);
+}
+:is(#education, #extracurriculars) .bt-stamp {
+  font-size: 0.82rem;
+}
+:is(#education, #extracurriculars) .bt-stamped {
+  font-size: clamp(0.88rem, 1.2vw, 1rem);
+}
+:is(#education, #extracurriculars) .bt-icpc-h {
+  font-size: clamp(3rem, 6vw, 4.75rem);
+}
+:is(#education, #extracurriculars) .bt-icpc-sub {
+  font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+}
+:is(#education, #extracurriculars) .bt-chips li {
+  font-size: clamp(0.88rem, 1.1vw, 0.98rem);
+}
+.site-view :is(#education, #extracurriculars) .bt-btn.bt-btn-ink {
+  font-size: clamp(0.95rem, 1.2vw, 1.05rem);
+}
+:is(#education, #extracurriculars) .bt-art {
+  width: clamp(4.5rem, 7vw, 5.75rem);
+}
+:is(#education, #extracurriculars) .bt-ring-lg {
+  width: 5.25rem;
+  height: 5.25rem;
+}
+:is(#education, #extracurriculars) .bt-ring-md {
+  width: 3.75rem;
+  height: 3.75rem;
+}
+:is(#education, #extracurriculars) .bt-icpc {
+  min-height: 13rem;
+}
+.pg-last {
+  padding-bottom: clamp(4rem, 10vh, 6rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wpl-storm {
+    display: none;
+  }
+  /* the project row's tiles keep their real timing, paused (a frozen still): the global reduced-motion rule's
+     0.01ms duration would finish their animation and stack every tile in one place */
+  .site-view .pr-tile {
+    animation-duration: var(--pr-dur) !important;
+    animation-iteration-count: infinite !important;
+    animation-play-state: paused !important;
+  }
+  .site-view *:not(.pr-tile),
+  .site-view *::before,
+  .site-view *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

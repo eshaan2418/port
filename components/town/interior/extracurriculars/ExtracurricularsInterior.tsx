@@ -16,7 +16,7 @@ import { BOARD_FONTS, STREET_FONT } from "../../scene/Buildings";
  * plays from the moment he steps out of the elevator (time since arrival is
  * `runtime.room.t`; neighbouring floors you glimpse show their end state).
  *   records (top) · dojo · rink · brain gym · aws community hall (ground)
- * Facts only from the brief: world champion in martial arts, Guinness World
+ * Facts only from the brief: world champion in martial arts, Limca Book of
  * Records holder (plaque text only, no logo), speed inline roller skater,
  * loves ice skating, ICPC, competitive programming, math, and the 200+
  * member AWS Student Builder Groups (formerly Cloud Club).
@@ -103,7 +103,7 @@ const rnd = (i: number, k = 0) => {
 /* ═══ 1. hall of records ═════════════════════════════════════════════════ */
 const PEDESTALS = [
   { x: -0.7, lines: ["world champion", "martial arts"], on: 1.3 },
-  { x: 3.0, lines: ["guinness world records", "holder"], on: 1.9 },
+  { x: 3.0, lines: ["limca book of records", "holder"], on: 1.9 },
   { x: 1.15, lines: [] as string[], on: 2.6, medal: true },
 ];
 const RECORDS_SPOT: V3 = [2.15, 0, 0.55];
